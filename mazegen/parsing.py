@@ -160,7 +160,7 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         val_errors['print']()
         sys.exit()
     else:
-        if (len(all_params['mandatory']) != len(checked)):
+        if (len(all_params['mandatory']) > len(checked)):
             missing = [key
                        for key in all_params['mandatory']
                        if not key in checked
