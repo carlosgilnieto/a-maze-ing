@@ -17,20 +17,20 @@ def int_to_hex(maze: List[List[int]]) -> List[List[str]]:
     """ Pasa de un 'grid' en Decimal a Hexadecimal"""
     grid:List[List] = []
     for line in maze:
-        txt = ""
+        row = ""
         for cell in line:
-            txt += str(hex(cell)[2:]).upper()
-        grid.append(txt)
+            row += str(hex(cell)[2:]).upper()
+        grid.append(row)
     return grid
 
 def hex_to_str(maze: List[List[int]]) -> str:
     """ Pasa de un 'grid' en Hexadecimal a un str"""
     output = ""
     for line in maze:
-        txt = ""
+        row = ""
         for cell in line:
-            txt += cell
-        output += txt + "\n"
+            row += cell
+        output += row + "\n"
     return output
 
 def generate_output() -> None:
