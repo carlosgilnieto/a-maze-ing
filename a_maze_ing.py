@@ -27,9 +27,7 @@ def main():
             # for key, val in pars_cfg.items():
             #     print(f"    {key} -> {val}")
             if check_config(pars_cfg, params):
-                maze_gen = MazeGenerator(pars_cfg['WIDTH'], pars_cfg['HEIGHT'],
-                                         pars_cfg['ENTRY'], pars_cfg['EXIT'],
-                                         pars_cfg['PERFECT'])
+                maze_gen = MazeGenerator(pars_cfg)
                 maze_gen.check_maze(maze_gen.visited, True)
         except FileNotFoundError:
             print_error(f"'{config_file}' does not exist in the directory")
