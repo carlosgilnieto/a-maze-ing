@@ -87,12 +87,12 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
                 return int(value)
             except ValueError:
                 # errors['add'](f"{key} is not a valid int")
-                raise ValueError(f"{key}: Is not a valid int")
+                raise ValueError(f"'{key}={value}' Is not a valid int")
         elif data_type == "tuple":
             values = value.split(",")
             if len(values) > 2:
                 # errors['add'](f"{key} must Only 2 int (int, int)")
-                raise ValueError(f"{key}: Only 2 int (int, int)")
+                raise ValueError(f"'{key}={value}' must be 2 int (int, int)")
             return tuple((int(values[0]), int(values[1])))
         elif data_type == "bool":
             if value == "True":
@@ -101,14 +101,14 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
                 return False
             else:
                 # errors['add'](f"{key}: Is not a bool")
-                raise ValueError(f"{key}: Is not a bool")
+                raise ValueError(f"'{key}={value}' Is not a valid bool")
         elif data_type == "file":
             extend = value.split(".")
             file_name: str = extend[0]
             if (extend[len(extend) - 1] != "txt"
                 or not file_name.strip()
                     or len(extend) < 2):
-                raise ValueError(f"{key}: Is not a valid .txt file")
+                raise ValueError(f"'{key}={value}' Is not a valid .txt file")
                 # errors['add'](f"{key}: Is not a valid .txt file")
             return value
         else:
@@ -155,22 +155,19 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
                     val_errors['add'](e)
                 checked.append(key)
     #Si hay una minima linea mal imprime todos los errores que ha habido
+    if (len(all_params['mandatory']) > len(checked)):
+        missing = [key
+                for key in all_params['mandatory']
+                if not key in checked
+                ]
+        missing = ", ".join(missing)
+        pars_errors['add'](f"Missing keys: {missing}")
     if pars_errors['len']() > 0 or val_errors['len']() > 0:
         pars_errors['print']()
         val_errors['print']()
         sys.exit()
     else:
-        if (len(all_params['mandatory']) > len(checked)):
-            missing = [key
-                       for key in all_params['mandatory']
-                       if not key in checked
-                       ]
-            missing = ", ".join(missing)
-            pars_errors['add'](f"Missing keys: {missing}")
-            pars_errors['print']()
-            sys.exit()
-        else:
-            return config
+        return config
     
 def check_config(config: Dict[str, Any], params: Dict) -> bool:
     """
