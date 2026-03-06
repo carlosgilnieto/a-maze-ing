@@ -29,8 +29,9 @@ class MazeGenerator():
     def get_center(self) -> Tuple:
         """
         Te devuelve la coordenada del centro del grid
+        Para usar división entera y que no haya float, con doble barra:
         """
-        return (self.width / 2, self.height / 2)
+        return (self.width // 2, self.height // 2)
     # def set_patron(self, center: tuple):
     #     if self.width % 2 == 0:
 
@@ -57,6 +58,44 @@ class MazeGenerator():
                 for sqr in line:
                     txt += str(sqr)
                 print(txt)
+
+
+    def check_maze_42(self, maze: List[List[Any]]):
+        """
+        Dibuja rid inicial en la terminal y superpone el patrón '42' en el centro.
+        Utiliza códigos ANSI para darle color.
+        """
+        if self.width % 2 == 0:
+            pattern = self.par_pattern
+        else:
+            pattern = self.impar_pattern
+        # 2. Calcular el punto de inicio para que el "42" quede centrado
+        center_x = self.width // 2
+        center_y = self.height // 2
+        # Desplazamos el punto de inicio hacia arriba y a la izquierda.
+        # (El patrón tiene unas 5 (0-4) filas de alto y 7-8 (0-6) columnas de ancho)
+        offset_x = center_x - 3
+        offset_y = center_y - 2
+        # 3. Extraer todas las coordenadas del patrón y adaptarlas al tamaño real del grid
+        # Usamos un 'set' (conjunto) porque buscar en un set es más rápido que en una lista
+        pattern_coords = set()
+        for row in pattern:
+            for py, px in row:
+                real_x = px + offset_x
+                real_y = py + offset_y
+                pattern_coords.add((real_x, real_y))
+        # 4. Dibujar la cuadrícula en la terminal
+        print(f"\n--- Grid Inicial ({self.width}x{self.height}) con Patrón 42 ---")
+        for y in range(self.height):
+            line_str = ""
+            for x in range(self.width):
+                if (x, y) in pattern_coords:
+                    line_str += "\033[43m  \033[0m"
+                else:
+                    line_str += "\033[40m  \033[0m"
+            print(line_str)
+
+
 
     def generate_maze(self):
         # 1. Mapeo de direcciones y paredes (usando sistema de bits)
