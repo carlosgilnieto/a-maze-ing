@@ -15,16 +15,16 @@ class MazeGenerator():
         self.visited = [[False for _ in range(config['WIDTH'])]
                         for _ in range(config['HEIGHT'])]  # grid de bools para DFS
 
-        self.par_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
+        self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
                             [(1, 0),         (1, 2),                 (1, 6)],
-                            [(2, 0), (2, 0), (2, 2), (2, 4), (2, 5), (2, 6)],
-                            [                (3, 2), (2, 4)                ],
-                            [                (4, 2), (4, 4), (2, 5), (2, 6)]]
-        self.impar_pattern = [[(0, 0),         (0, 2), (0, 5), (0, 6), (0, 7)],
+                            [(2, 0), (2, 1), (2, 2), (2, 4), (2, 5), (2, 6)],
+                            [                (3, 2), (3, 4)                ],
+                            [                (4, 2), (4, 4), (4, 5), (4, 6)]]
+        self.par_pattern = [[(0, 0),         (0, 2), (0, 5), (0, 6), (0, 7)],
                               [(1, 0),         (1, 2),                 (1, 7)],
-                              [(2, 0), (2, 0), (2, 2), (2, 5), (2, 6), (2, 7)],
-                              [                (3, 2), (2, 5)                ],
-                              [                (4, 2), (4, 5), (2, 6), (2, 7)]]
+                              [(2, 0), (2, 1), (2, 2), (2, 5), (2, 6), (2, 7)],
+                              [                (3, 2), (3, 5)                ],
+                              [                (4, 2), (4, 5), (4, 6), (4, 7)]]
 
     def get_center(self) -> Tuple:
         """
@@ -44,13 +44,9 @@ class MazeGenerator():
                 txt = ""
                 for x, sqr in enumerate(line, 1):
                     if sqr is False:
-                        if (x == center[0] or
-                                y == center[1]):
-                            txt += "\033[43m0\033[0m"
-                        else: 
-                            txt += "0"
+                        txt += "\033[40m0\033[0m"
                     else:
-                        txt += "1"
+                        txt += "\033[43m1\033[0m"
                 print(txt)
         else:
             for line in maze:
@@ -60,9 +56,10 @@ class MazeGenerator():
                 print(txt)
 
 
-    def check_maze_42(self, maze: List[List[Any]]):
+
+    def patron_42(self):
         """
-        Dibuja rid inicial en la terminal y superpone el patrón '42' en el centro.
+        Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
         if self.width % 2 == 0:
@@ -74,7 +71,7 @@ class MazeGenerator():
         center_y = self.height // 2
         # Desplazamos el punto de inicio hacia arriba y a la izquierda.
         # (El patrón tiene unas 5 (0-4) filas de alto y 7-8 (0-6) columnas de ancho)
-        offset_x = center_x - 3
+        offset_x = center_x - 4
         offset_y = center_y - 2
         # 3. Extraer todas las coordenadas del patrón y adaptarlas al tamaño real del grid
         # Usamos un 'set' (conjunto) porque buscar en un set es más rápido que en una lista
@@ -84,17 +81,12 @@ class MazeGenerator():
                 real_x = px + offset_x
                 real_y = py + offset_y
                 pattern_coords.add((real_x, real_y))
-        # 4. Dibujar la cuadrícula en la terminal
-        print(f"\n--- Grid Inicial ({self.width}x{self.height}) con Patrón 42 ---")
+
+        # 4. Añadido patrón como visitado.
         for y in range(self.height):
-            line_str = ""
             for x in range(self.width):
                 if (x, y) in pattern_coords:
-                    line_str += "\033[43m  \033[0m"
-                else:
-                    line_str += "\033[40m  \033[0m"
-            print(line_str)
-
+                    self.visited[y][x] = True
 
 
     def generate_maze(self):

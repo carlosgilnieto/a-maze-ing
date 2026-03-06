@@ -25,14 +25,13 @@ def main():
                 config = f.read()
             pars_cfg: Dict[str, Any] = parsing_config(config,
                                                       params)
-            print("Config:")
-            for key, val in pars_cfg.items():
-                print(f"    {key} -> {val}")
-            # if check_config(pars_cfg, params):
-            #     maze_gen = MazeGenerator(pars_cfg['WIDTH'], pars_cfg['HEIGHT'],
-            #                              pars_cfg['ENTRY'], pars_cfg['EXIT'],
-            #                              pars_cfg['PERFECT'])
-            #     maze_gen.check_maze(maze_gen.visited, True)
+            #print("Config:")
+            #for key, val in pars_cfg.items():
+            #    print(f"    {key} -> {val}")
+            if check_config(pars_cfg, params):
+                maze_gen = MazeGenerator(pars_cfg)
+                maze_gen.patron_42()
+                maze_gen.check_maze(maze_gen.visited, True)
         except FileNotFoundError:
             print(f"'{config_file}' does not exist in the directory")
             sys.exit()
