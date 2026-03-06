@@ -1,7 +1,8 @@
 from typing import List, Any, Tuple, Dict
-
+import random
 
 class MazeGenerator():
+
     # CAMBIAR PARAMETROS DE ENTRADA A DICCIONARIO
     def __init__(self, config: Dict[str, Any]):
         self.width = config['WIDTH']
@@ -13,7 +14,8 @@ class MazeGenerator():
         self.grid = [[15 for _ in range(config['WIDTH'])]
                      for _ in range(config['HEIGHT'])]
         self.visited = [[False for _ in range(config['WIDTH'])]
-                        for _ in range(config['HEIGHT'])]  # grid de bools para DFS
+                        for _ in range(config['HEIGHT'])]
+        # grid de bools para DFS. De inicio todo en False.
 
         self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
                             [(1, 0),         (1, 2),                 (1, 6)],
@@ -88,13 +90,12 @@ class MazeGenerator():
                 if (x, y) in pattern_coords:
                     self.visited[y][x] = True
 
-
     def generate_maze(self):
         # 1. Mapeo de direcciones y paredes (usando sistema de bits)
         # Asumiendo los bits estándar: Norte=1, Este=2, Sur=4, Oeste=8
-        # Formato: (DesplX, DesplY, Pared a romper en celda actual,
-        #           pared a romper en la vecina)
-        DIRECTIONS = [
+        # Formato: (DesplX, DesplY, Pared a romper en celda actual (Wall),
+        #           pared a romper en la vecina(opp_wall))
+        directions = [
                 (0, -1, 1, 4),  # Norte
                 (1, 0, 2, 8),   # Este
                 (0, 1, 4, 1),   # Sur
@@ -104,4 +105,37 @@ class MazeGenerator():
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
         # Usar random?? para que sea aleatorio
         start_x, start_y = 0, 0
-        self.visited[start_y][start_x] = True
+        self.visited[start_y][start_x] = True  # Celda de inicio visitada.
+        # "pila" (stack) nos servirá para retroceder (backtrack)
+        stack = [(start_x, start_y)]
+
+        # 3. Bucle principal del algoritmo
+        while stack:
+            # Miramos la celda actual (la que está en la cima de la pila)
+            cx, cy = stack[-1]
+            # Buscar todos los vecinos válidos que NO han sido visitados
+            unvisited_neighbors = []
+
+            # bucle que dará exactamente 4 vueltas, una por cada punto
+            # cardinal de la lista DIRECTIONS
+            for dx, dy, wall, opp_wall in directions:
+                nx, ny = cx + dx, cy + dy  # next x, next y. Es la celda 'vecina'
+                # Calcula las coordenadas reales de ese vecino en la cuadrícula
+
+                # Comprobar que el vecino esté dentro de los límites
+                if (0 <= nx < self.width) and (0 <= ny < self.height):
+                    # Comprobar si NO ha sido visitado
+                    if not self.visited[ny][nx]:
+                        unvisited_neighbors.append((nx, ny, wall, opp_wall))
+
+            # Avanzar o retroceder
+            if unvisited_neighbors:
+                # Elegimos uno al azar para crear la ruta del laberinto
+                nx, ny, wall, opp_wall = random.choice(unvisited_neighbors)
+
+                # ROMPER LAS PAREDES:
+                # Usamos el operador AND (&) con el complemento a nivel de bits (~)
+                # Ejemplo: 15 & ~1 (1111 AND 1110) = 14 (1110) -> Hemos quitado el bit de la pared Norte
+                self.grid[cy][cx] &= ~wall      # celda actual → derriba la pared compartida
+                self.grid[ny][nx] &= ~opp_wall  # celda vecina → derriba la pared compartida
+
