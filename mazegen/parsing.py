@@ -1,6 +1,19 @@
 import sys
 from typing import List, Dict, Any, Tuple
 
+# mandatory_params = {'WIDTH': "int",
+#                         'HEIGHT': "int",
+#                         'ENTRY': "tuple",
+#                         'EXIT': "tuple",
+#                         'OUTPUT_FILE': "file",
+#                         'PERFECT': "bool"}
+
+# bonus_params = {"SEED": "int"}
+
+# params = {'mandatory': mandatory_params,
+#               'bonus': bonus_params}
+
+
 #Cambiar Docstrings
 def print_error(msg: str, error_type="Error") -> None:
     """
@@ -31,6 +44,17 @@ def errors(error_type: str) -> Dict[str, callable]:
             'len': len_error,
             'print': print_all}
 
+#POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
+def get_config_file() -> str:
+    '''
+    Devuelve el nombre del 1º argumento, que deberia de ser el nombre del archivo de donde sacar
+    las variables de configuracion
+    '''
+    n = len(sys.argv)
+    if n != 2:
+        print_error("run: python3 a_maze_ing.py \"file_name\"")
+        sys.exit()
+    return sys.argv[1]
 
 def open_file(file: str) -> str:
     """
@@ -136,8 +160,17 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         val_errors['print']()
         sys.exit()
     else:
-        #FALTA COMPROBAR LOS PARAMETROS MANDATORY
-        return config
+        if (len(all_params['mandatory']) != len(checked)):
+            missing = [key
+                       for key in all_params['mandatory']
+                       if not key in checked
+                       ]
+            missing = ", ".join(missing)
+            pars_errors['add'](f"Missing keys: {missing}")
+            pars_errors['print']()
+            sys.exit()
+        else:
+            return config
     
 def check_config(config: Dict[str, Any], params: Dict) -> bool:
     """
