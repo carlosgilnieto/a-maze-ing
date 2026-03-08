@@ -8,6 +8,14 @@ from .generator import MazeGenerator
 # \033[3J -> Borra el historial de desplazamiento
 # \033[?25l -> Oculta el cursor en la terminal
 
+class Color(Enum):
+    BLUE = "\033[34m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    RED = "\033[31m"
+    RESET = "\033[0m"
+
 class Draw(Enum):
     # +---+---+
     # | ■     |
@@ -20,16 +28,17 @@ class Draw(Enum):
     POINT="■"
 
 
-def render_maze(maze: MazeGenerator) -> str:
+def render_maze(maze: MazeGenerator, color: Color) -> str:
 # def render_maze(grid: list[list]) -> str:
     # +---+---+ (Line Norte de 0,0)
     # | ■     | (Line Center de 0,0)
     # +---+---+ (Line Norte de 1,0)
     grid = maze.grid
-    # clean_terminal()
+    color = color.value
+    clean_terminal()
     display = ""
     for y in range(maze.height):
-        line_north = ""
+        line_north = color
         line_center = ""
         for x in range(maze.width):
             line_north += Draw.CROSS.value # Pinta las esquinas
@@ -38,19 +47,19 @@ def render_maze(maze: MazeGenerator) -> str:
             else:
                 line_north += Draw.EMPTY_H.value
             if grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
-                line_center += Draw.WALL_V.value
+                line_center += color + Draw.WALL_V.value + Color.RESET.value
             else:
                 line_center += Draw.EMPTY_V.value
             line_center += Draw.EMPTY_H.value
         # Cierre del borde derecha
         line_north += Draw.CROSS.value # Añade el ultimo cross
         if grid[y][maze.width - 1] & 2:
-            line_center += Draw.WALL_V.value
+            line_center += color + Draw.WALL_V.value + Color.RESET.value
         else:
             line_center += Draw.EMPTY_V.value
         # Junta todas las lines para pintar la celda
         display += line_north + "\n" + line_center + "\n" 
-    line_final = ""
+    line_final = color
     for x in range(maze.width):
         line_final += Draw.CROSS.value
         if grid[y - 1][x] & 4: # Check si tiene pared al sur
@@ -58,7 +67,7 @@ def render_maze(maze: MazeGenerator) -> str:
         else:
             line_final += Draw.EMPTY_H.value
     line_final += Draw.CROSS.value
-    display += line_final
+    display += line_final + Color.RESET.value
     return display
 
 def disable_cursor():
