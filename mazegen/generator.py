@@ -64,6 +64,13 @@ class MazeGenerator():
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
+        if self.width < 8 or self.height < 6:
+            print("\nSe va a generar un laberinto SIN 'patrón 42'."
+                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
+                  "para albergar el 'patrón 42'."
+                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
+            return # Salimos de la función patrón 42 y generamos laberinto normal.
+
         if self.width % 2 == 0:
             pattern = self.par_pattern
         else:
@@ -90,7 +97,35 @@ class MazeGenerator():
                 if (x, y) in pattern_coords:
                     self.visited[y][x] = True
 
+    def open_doors(self, pos: tuple):
+        """
+        Comprueba si una coordenada está en el borde del laberinto.
+        Si es así, rompe el muro exterior correspondiente para abrirlo al mundo.
+        """
+        x, y = pos
+
+        # Norte = 1 (0001)
+        # Este  = 2 (0010)
+        # Sur   = 4 (0100)
+        # Oeste = 8 (1000)
+
+        if (y == 0):
+            # Está en el borde superior: romper pared Norte: ~0001 => 1110.
+            self.grid[y][x] &= ~1
+        elif (y == self.height - 1):
+            # Está en el borde inferior: romper pared Sur: ~0100 => 1011.
+            self.grid[y][x] &= ~4
+        elif (x == 0):
+            # Está en el borde izquierdo: romper pared Oeste: ~1000 => 0111.
+            self.grid[y][x] &= ~8
+        elif (x == self.width - 1):
+            # Está en el borde derecho: romper pared Este: ~0010 => 1101.
+            self.grid[y][x] &= ~2
+
     def generate_maze(self):
+        # 0. Insertar patrón 42
+        self.patron_42()
+
         # 1. Mapeo de direcciones y paredes (usando sistema de bits)
         # Asumiendo los bits estándar: Norte=1, Este=2, Sur=4, Oeste=8
         # Formato: (DesplX, DesplY, Pared a romper en celda actual (Wall),
@@ -138,4 +173,25 @@ class MazeGenerator():
                 # Ejemplo: 15 & ~1 (1111 AND 1110) = 14 (1110) -> Hemos quitado el bit de la pared Norte
                 self.grid[cy][cx] &= ~wall      # celda actual → derriba la pared compartida
                 self.grid[ny][nx] &= ~opp_wall  # celda vecina → derriba la pared compartida
+
+                self.visited[ny][nx] = True
+                stack.append((nx, ny))
+            else:
+                # Callejón sin salida: Si no hay vecinos no visitados, eliminamos esta celda de la pila
+                # y el algoritmo retrocede al anterior:
+                stack.pop()
+        # Abrir acceso para Start y Exit
+        self.open_doors(self.entry)
+        self.open_doors(self.exit)
+    
+    def debug_print_state(self):
+        """
+        Imprime el estado actual de 'grid'
+        """
+        for y in range(self.height):
+            row_grid = ""
+            for x in range(self.width):
+                # {:>2} asegura que los números ocupen siempre 2 espacios
+                row_grid += f" {self.grid[y][x]:>2} "
+            print(row_grid)
 

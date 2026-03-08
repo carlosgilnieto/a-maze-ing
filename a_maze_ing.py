@@ -30,8 +30,9 @@ def main():
             #    print(f"    {key} -> {val}")
             if check_config(pars_cfg, params):
                 maze_gen = MazeGenerator(pars_cfg)
-                maze_gen.patron_42()
-                maze_gen.check_maze(maze_gen.visited, True)
+                #maze_gen.check_maze(maze_gen.visited, True)
+                maze_gen.generate_maze()
+                maze_gen.debug_print_state()
         except FileNotFoundError:
             print(f"'{config_file}' does not exist in the directory")
             sys.exit()
