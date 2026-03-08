@@ -50,7 +50,12 @@ def render_maze(maze: MazeGenerator, color: Color) -> str:
                 line_center += color + Draw.WALL_V.value + Color.RESET.value
             else:
                 line_center += Draw.EMPTY_V.value
-            line_center += Draw.EMPTY_H.value
+            if x == maze.entry[0] and y == maze.entry[1]:
+                line_center += Color.GREEN.value + f" {Draw.POINT.value} " + Color.RESET.value
+            elif x == maze.exit[0] and y == maze.exit[1]:
+                line_center += Color.RED.value + f" {Draw.POINT.value} " + Color.RESET.value
+            else:
+                line_center += Draw.EMPTY_H.value
         # Cierre del borde derecha
         line_north += Draw.CROSS.value # Añade el ultimo cross
         if grid[y][maze.width - 1] & 2:
