@@ -1,5 +1,6 @@
 import time
 # time.sleep(0.5)
+import sys
 from enum import Enum
 from .generator import MazeGenerator
 
@@ -25,10 +26,10 @@ class Draw(Enum):
     WALL_V= "|" # Wall for East & West
     EMPTY_V= " " # No-Wall for East & West
     CROSS = "+"
-    POINT="■"
+    POINT=" ■ "
 
 
-def render_maze(maze: MazeGenerator, color: Color) -> str:
+def display_maze(maze: MazeGenerator, color=Color.RESET) -> str:
 # def render_maze(grid: list[list]) -> str:
     # +---+---+ (Line Norte de 0,0)
     # | ■     | (Line Center de 0,0)
@@ -50,12 +51,13 @@ def render_maze(maze: MazeGenerator, color: Color) -> str:
                 line_center += color + Draw.WALL_V.value + Color.RESET.value
             else:
                 line_center += Draw.EMPTY_V.value
-            if x == maze.entry[0] and y == maze.entry[1]:
-                line_center += Color.GREEN.value + f" {Draw.POINT.value} " + Color.RESET.value
-            elif x == maze.exit[0] and y == maze.exit[1]:
-                line_center += Color.RED.value + f" {Draw.POINT.value} " + Color.RESET.value
+            if (x, y) == maze.entry:
+                line_center += Color.GREEN.value + Draw.POINT.value + Color.RESET.value
+            elif (x, y) == maze.exit:
+                line_center += Color.RED.value + Draw.POINT.value + Color.RESET.value
             else:
                 line_center += Draw.EMPTY_H.value
+
         # Cierre del borde derecha
         line_north += Draw.CROSS.value # Añade el ultimo cross
         if grid[y][maze.width - 1] & 2:
@@ -63,17 +65,42 @@ def render_maze(maze: MazeGenerator, color: Color) -> str:
         else:
             line_center += Draw.EMPTY_V.value
         # Junta todas las lines para pintar la celda
-        display += line_north + "\n" + line_center + "\n" 
+        display += line_north + "\n" + line_center + "\n"
+    
+    #Cierre de la pared de abajo
     line_final = color
     for x in range(maze.width):
         line_final += Draw.CROSS.value
-        if grid[y - 1][x] & 4: # Check si tiene pared al sur
-            line_final += Draw.WALL_H.value
-        else:
-            line_final += Draw.EMPTY_H.value
+        line_final += Draw.WALL_H.value
     line_final += Draw.CROSS.value
     display += line_final + Color.RESET.value
-    return display
+    print(display)
+    enable_cursor()
+    display_options()
+
+def display_options():
+        print("=== A-Maze-ing ===")
+        print("1. Re-generate a new maze\n"
+              "2. Show/Hide path from entry to exit\n"
+              "3. Change maze colors\n"
+              "4. Quit\n")
+        option = input("Choise? (1-4):")
+        if not option in ["1", "2", "3", "4"]:
+            print("\033[31mSelect a valid option (1-4).\033[0m\n")
+            display_options()
+        else:
+        #Queda meter que dependiendo de la opcion haga lo que corresponde
+            if option == "1": # Regenerar el maze
+                sys.exit()
+            elif option == "2": # Show/Hide path
+                sys.exit()
+            elif option == "3": # Cambiar color
+                sys.exit()
+            if option == "4":
+                clean_terminal()
+                enable_cursor()
+                sys.exit()
+
 
 def disable_cursor():
     print("\033[?25l")
@@ -84,5 +111,5 @@ def enable_cursor():
 
 
 def clean_terminal() -> str:
-    print("\033[2J\033[3J\033[H\033\033[?25l")
+    sys.stdout.write("\033[2J\033[3J\033[H\033[?25l")
 
