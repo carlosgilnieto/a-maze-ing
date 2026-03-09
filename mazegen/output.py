@@ -1,4 +1,5 @@
 import random #BORRAR
+from .generator import MazeGenerator
 from mazegen.errors import print_error
 from typing import List, Any, Dict
 
@@ -33,13 +34,13 @@ def hex_to_str(maze: List[List[int]]) -> str:
         output += row + "\n"
     return output
 
-def generate_output() -> None:
-    maze = int_to_hex(generate_maze(5,5))
-    maze_txt = hex_to_str(maze)
+def generate_output(maze: MazeGenerator) -> None:
+    maze_hex = int_to_hex(maze.grid)
+    maze_txt = hex_to_str(maze_hex)
     #Cambiar por value de dic
-    config = {'ENTRY': (1, 1),
-              'EXIT': (3, 6),
-              'OUTPUT_FILE': "output_maze.txt"}
+    config = {'ENTRY': maze.entry,
+              'EXIT': maze.exit,
+              'OUTPUT_FILE': maze.output}
     with open(config['OUTPUT_FILE'], 'w') as output:
         #Añade el laberinto al output.txt
         output.write(maze_txt)
