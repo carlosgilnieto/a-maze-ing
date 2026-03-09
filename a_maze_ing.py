@@ -1,5 +1,5 @@
 import sys
-from mazegen import MazeGenerator, render_maze, Color
+from mazegen import MazeGenerator, animated_path, render_maze, Color
 
 
 def main():
@@ -12,13 +12,15 @@ def main():
     filename = sys.argv[1]
     maze = MazeGenerator(filename)
     maze.generate_maze()
-    maze.solve_maze()
+    path = maze.solve_maze()
 
     pallet = Color.get_pallete()
     color_idx = 0
+    show_path = True
     msg = ""
     while True:
-        print(render_maze(maze, pallet[color_idx]))
+        animated_path(maze, path, pallet[color_idx], 0)
+        # print(render_maze(maze, show_path, pallet[color_idx]))
         print("=== A-Maze-ing ===")
         print("1. Re-generate a new maze\n"
                 "2. Show/Hide path from entry to exit\n"
@@ -32,8 +34,9 @@ def main():
             msg = ""
             if option == "1": # Regenerar el maze
                 maze.generate_maze()
+                path = maze.solve_maze()
             elif option == "2": # Show/Hide path
-                sys.exit()
+                show_path = not show_path
             elif option == "3": # Cambiar color
                 color_idx = (color_idx + 1) % len(pallet)
             if option == "4":

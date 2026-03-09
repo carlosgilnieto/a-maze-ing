@@ -32,10 +32,11 @@ class Draw(Enum):
     WALL_V= "|" # Wall for East & West
     EMPTY_V= " " # No-Wall for East & West
     CROSS = "+"
-    POINT=" ■ "
+    POINT=" ● "
+    BLOCK=" ■ "
 
 
-def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
+def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
     """
     Devuelve el string para imprimir el resultado.
     Creo que si se quiere animar el recorrido, hay que cambiar el return a un print
@@ -44,6 +45,7 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
     # | ■     | (Line Center de 0,0)
     # +---+---+ (Line Norte de 1,0)
     grid = maze.grid
+    path = maze.path
     color = color.value
     clean_terminal() #Por el momento quita el aviso del patron 42
     display = ""
@@ -64,15 +66,19 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
                 line_center += Draw.EMPTY_V.value
             if (x, y) == maze.entry:
                 line_center += (Color.GREEN.value + 
-                                Draw.POINT.value + 
+                                Draw.BLOCK.value + 
                                 Color.WHITE.value)
             elif (x, y) == maze.exit:
                 line_center += (Color.RED.value + 
-                                Draw.POINT.value + 
+                                Draw.BLOCK.value + 
                                 Color.WHITE.value)
-            elif grid[y][x] == 15:
-                line_center += (Color.WHITE.value + 
+            elif (x, y) in path and show_path: # Solo deberia de pintar el cuadrado si se quiere
+                line_center += (Color.WHITE.value +
                                 Draw.POINT.value)
+            elif grid[y][x] == 15:
+                line_center += (color + 
+                                Draw.BLOCK.value +
+                                Color.WHITE.value)
             else:
                 line_center += Draw.EMPTY_H.value
 
@@ -93,31 +99,12 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
     return display
 
 
-def display_options():
-        print("=== A-Maze-ing ===")
-        print("1. Re-generate a new maze\n"
-              "2. Show/Hide path from entry to exit\n"
-              "3. Change maze colors\n"
-              "4. Quit\n")
-        return None
-        # Todo esto de abajo deberia de estar en el script main del programa
-        option = input("Choise? (1-4):")
-        if not option in ["1", "2", "3", "4"]:
-            print("\033[31mSelect a valid option (1-4).\033[0m\n")
-            display_options()
-        else:
-        #Queda meter que dependiendo de la opcion haga lo que corresponde
-            if option == "1": # Regenerar el maze
-                sys.exit()
-            elif option == "2": # Show/Hide path
-                sys.exit()
-            elif option == "3": # Cambiar color
-                sys.exit()
-            if option == "4":
-                clean_terminal()
-                enable_cursor()
-                sys.exit()
-
+def animated_path(maze: MazeGenerator, path: list, color=Color.WHITE, delay=0.1):
+    for i in range(len(path) + 1):
+        step_path = path[:i]
+        maze.path = step_path
+        print(render_maze(maze, True, color))
+        time.sleep(delay)
 
 def disable_cursor():
     print("\033[?25l")
