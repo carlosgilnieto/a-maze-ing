@@ -2,20 +2,6 @@ import sys
 from typing import List, Dict, Any, Tuple
 from .errors import error, print_error
 
-# mandatory_params = {'WIDTH': "int",
-#                         'HEIGHT': "int",
-#                         'ENTRY': "tuple",
-#                         'EXIT': "tuple",
-#                         'OUTPUT_FILE': "file",
-#                         'PERFECT': "bool"}
-
-# bonus_params = {"SEED": "int"}
-
-# params = {'mandatory': mandatory_params,
-#               'bonus': bonus_params}
-
-
-
 
 #POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
 def get_config_file() -> str:
@@ -158,6 +144,11 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
         #Comprueba si ENTRY y EXIT son distintos
         if config.get('ENTRY', None) == config.get('EXIT', None):
             raise ValueError("The value of ENTRY and EXIT must be different")
+        if config.get('WIDHT') < 8 or config.get('HEIGHT') < 6:
+            print("\033[33mWARNING: Se va a generar un laberinto SIN 'patrón 42'."
+                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
+                  "para albergar el 'patrón 42'."
+                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\033[0m")
         for key in ['ENTRY', 'EXIT']:
             pos: Tuple = config.get(key, None) # Recoge el valor de la config
             #Comprueba que es los parametros de entry and exit esten dentro del tamaño del laberinto
