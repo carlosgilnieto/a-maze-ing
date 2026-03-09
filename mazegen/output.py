@@ -1,18 +1,6 @@
-import random #BORRAR
 from .generator import MazeGenerator
-from mazegen.errors import print_error
-from typing import List, Any, Dict
+from typing import List
 
-#BORRAR (funcion auxiliar para pruebas)
-def generate_maze(w, h) -> list[list[int]]:
-    maze = []
-    walls = [1,2,4,8,3,5,9,6,10,12,7,11,13,14]
-    for y in range(h):
-        line = []
-        for x in range(w):
-            line.append(random.choice(walls))
-        maze.append(line)
-    return maze
 
 def int_to_hex(maze: List[List[int]]) -> List[List[str]]:
     """ Pasa de un 'grid' en Decimal a Hexadecimal"""
@@ -24,6 +12,7 @@ def int_to_hex(maze: List[List[int]]) -> List[List[str]]:
         grid.append(row)
     return grid
 
+
 def hex_to_str(maze: List[List[int]]) -> str:
     """ Pasa de un 'grid' en Hexadecimal a un str"""
     output = ""
@@ -34,6 +23,8 @@ def hex_to_str(maze: List[List[int]]) -> str:
         output += row + "\n"
     return output
 
+
+#Esto esta pensado para que directamente vaya en la clase MazeGenerator
 def generate_output(maze: MazeGenerator) -> None:
     maze_hex = int_to_hex(maze.grid)
     maze_txt = hex_to_str(maze_hex)
