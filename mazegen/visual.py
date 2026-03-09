@@ -9,13 +9,19 @@ from .generator import MazeGenerator
 # \033[3J -> Borra el historial de desplazamiento
 # \033[?25l -> Oculta el cursor en la terminal
 
+
 class Color(Enum):
     BLUE = "\033[34m"
     CYAN = "\033[36m"
     GREEN = "\033[32m"
     YELLOW = "\033[33m"
     RED = "\033[31m"
-    RESET = "\033[0m"
+    WHITE = "\033[0m"
+
+    @staticmethod
+    def get_pallete() -> list:
+        return [c for c in Color]
+
 
 class Draw(Enum):
     # +---+---+
@@ -29,14 +35,17 @@ class Draw(Enum):
     POINT=" ■ "
 
 
-def display_maze(maze: MazeGenerator, color=Color.RESET) -> str:
-# def render_maze(grid: list[list]) -> str:
+def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
+    """
+    Devuelve el string para imprimir el resultado.
+    Creo que si se quiere animar el recorrido, hay que cambiar el return a un print
+    """
     # +---+---+ (Line Norte de 0,0)
     # | ■     | (Line Center de 0,0)
     # +---+---+ (Line Norte de 1,0)
     grid = maze.grid
     color = color.value
-    clean_terminal()
+    clean_terminal() #Por el momento quita el aviso del patron 42
     display = ""
     for y in range(maze.height):
         line_north = color
@@ -48,22 +57,29 @@ def display_maze(maze: MazeGenerator, color=Color.RESET) -> str:
             else:
                 line_north += Draw.EMPTY_H.value
             if grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
-                line_center += color + Draw.WALL_V.value + Color.RESET.value
+                line_center += (color + 
+                                Draw.WALL_V.value + 
+                                Color.WHITE.value)
             else:
                 line_center += Draw.EMPTY_V.value
             if (x, y) == maze.entry:
-                line_center += Color.GREEN.value + Draw.POINT.value + Color.RESET.value
+                line_center += (Color.GREEN.value + 
+                                Draw.POINT.value + 
+                                Color.WHITE.value)
             elif (x, y) == maze.exit:
-                line_center += Color.RED.value + Draw.POINT.value + Color.RESET.value
+                line_center += (Color.RED.value + 
+                                Draw.POINT.value + 
+                                Color.WHITE.value)
+            elif grid[y][x] == 15:
+                line_center += (Color.WHITE.value + 
+                                Draw.POINT.value)
             else:
                 line_center += Draw.EMPTY_H.value
 
         # Cierre del borde derecha
         line_north += Draw.CROSS.value # Añade el ultimo cross
         if grid[y][maze.width - 1] & 2:
-            line_center += color + Draw.WALL_V.value + Color.RESET.value
-        else:
-            line_center += Draw.EMPTY_V.value
+            line_center += color + Draw.WALL_V.value + Color.WHITE.value
         # Junta todas las lines para pintar la celda
         display += line_north + "\n" + line_center + "\n"
     
@@ -73,10 +89,9 @@ def display_maze(maze: MazeGenerator, color=Color.RESET) -> str:
         line_final += Draw.CROSS.value
         line_final += Draw.WALL_H.value
     line_final += Draw.CROSS.value
-    display += line_final + Color.RESET.value
-    print(display)
-    enable_cursor()
-    display_options()
+    display += line_final + Color.WHITE.value
+    return display
+
 
 def display_options():
         print("=== A-Maze-ing ===")
@@ -84,6 +99,8 @@ def display_options():
               "2. Show/Hide path from entry to exit\n"
               "3. Change maze colors\n"
               "4. Quit\n")
+        return None
+        # Todo esto de abajo deberia de estar en el script main del programa
         option = input("Choise? (1-4):")
         if not option in ["1", "2", "3", "4"]:
             print("\033[31mSelect a valid option (1-4).\033[0m\n")
