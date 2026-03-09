@@ -2,20 +2,6 @@ import sys
 from typing import List, Dict, Any, Tuple
 from .errors import error, print_error
 
-# mandatory_params = {'WIDTH': "int",
-#                         'HEIGHT': "int",
-#                         'ENTRY': "tuple",
-#                         'EXIT': "tuple",
-#                         'OUTPUT_FILE': "file",
-#                         'PERFECT': "bool"}
-
-# bonus_params = {"SEED": "int"}
-
-# params = {'mandatory': mandatory_params,
-#               'bonus': bonus_params}
-
-
-
 
 #POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
 def get_config_file() -> str:
@@ -28,6 +14,7 @@ def get_config_file() -> str:
         print_error("run: python3 a_maze_ing.py \"file_name\"")
         sys.exit()
     return sys.argv[1]
+
 
 def open_file(file: str) -> str:
     """
@@ -141,6 +128,7 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         sys.exit()
     else:
         return config
+
     
 def check_config(config: Dict[str, Any], params: Dict) -> bool:
     """

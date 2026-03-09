@@ -1,16 +1,36 @@
 from typing import List, Any, Tuple, Dict
+from .errors import print_error
+from .parsing import parsing_config, check_config
 import random
+import sys
 
 class MazeGenerator():
+    def __init__(self, config_file: str):
+        #Obtiene los valores del config file
+        if config_file:
+            try:
+                with open(config_file) as f:
+                    config = f.read()
+                pars_cfg: Dict[str, Any] = parsing_config(config,
+                                                          self.get_params())
+                if not check_config(pars_cfg, self.get_params()):
+                    sys.exit()
+                else:
+                    config = pars_cfg
+            except FileNotFoundError:
+                print_error(f"'{config_file}' does not exist in the directory")
+                sys.exit()
+            except ValueError as e:
+                print_error(e)
+                sys.exit()
 
-    # CAMBIAR PARAMETROS DE ENTRADA A DICCIONARIO
-    def __init__(self, config: Dict[str, Any]):
         self.width = config['WIDTH']
         self.height = config['HEIGHT']
         self.entry = config['ENTRY']
         self.exit = config['EXIT']
-        self.is_perfect = ['PERFECT']
-        self.seed = ['SEED']
+        self.output_file = config['OUTPUT_FILE']
+        self.is_perfect = config['PERFECT']
+        random.seed(config.get('SEED', 0))
         self.grid = [[15 for _ in range(config['WIDTH'])]
                      for _ in range(config['HEIGHT'])]
         self.visited = [[False for _ in range(config['WIDTH'])]
@@ -28,14 +48,38 @@ class MazeGenerator():
                               [                (3, 2), (3, 5)                ],
                               [                (4, 2), (4, 5), (4, 6), (4, 7)]]
 
+    @staticmethod
+    def get_config_file() -> str:
+        '''
+        Devuelve el nombre del 1º argumento, que deberia de ser el nombre del archivo de donde sacar
+        las variables de configuracion
+        '''
+        n = len(sys.argv)
+        if n != 2:
+            print_error("run: python3 a_maze_ing.py \"file_name\"")
+            sys.exit()
+        return sys.argv[1]
+
+    @staticmethod
+    def get_params() -> dict[dict[str]]:
+        mandatory_params = {'WIDTH': "int",
+                            'HEIGHT': "int",
+                            'ENTRY': "tuple",
+                            'EXIT': "tuple",
+                            'OUTPUT_FILE': "file",
+                            'PERFECT': "bool"}
+
+        bonus_params = {"SEED": "int"}
+
+        return {'mandatory': mandatory_params,
+                'bonus': bonus_params}
+
     def get_center(self) -> Tuple:
         """
         Te devuelve la coordenada del centro del grid
         Para usar división entera y que no haya float, con doble barra:
         """
         return (self.width // 2, self.height // 2)
-    # def set_patron(self, center: tuple):
-    #     if self.width % 2 == 0:
 
     #BORRAR
     def check_maze(self, maze: List[List[Any]], debug=False):
@@ -56,8 +100,6 @@ class MazeGenerator():
                 for sqr in line:
                     txt += str(sqr)
                 print(txt)
-
-
 
     def patron_42(self):
         """
