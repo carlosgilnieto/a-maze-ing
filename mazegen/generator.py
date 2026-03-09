@@ -30,11 +30,9 @@ class MazeGenerator():
         self.exit = config['EXIT']
         self.output_file = config['OUTPUT_FILE']
         self.is_perfect = config['PERFECT']
-        random.seed(config.get('SEED', 0))
-        self.grid = [[15 for _ in range(config['WIDTH'])]
-                     for _ in range(config['HEIGHT'])]
-        self.visited = [[False for _ in range(config['WIDTH'])]
-                        for _ in range(config['HEIGHT'])]
+        self.seed = config.get('SEED')
+        self.grid = []
+        self.visited = []
         # grid de bools para DFS. De inicio todo en False.
 
         self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
@@ -95,10 +93,10 @@ class MazeGenerator():
         Utiliza códigos ANSI para darle color.
         """
         if self.width < 8 or self.height < 6:
-            print("\nSe va a generar un laberinto SIN 'patrón 42'."
-                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
-                  "para albergar el 'patrón 42'."
-                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
+            # print("\nSe va a generar un laberinto SIN 'patrón 42'."
+            #       "Esto es porque las dimensiones propuestas son demasiado pequeñas"
+            #       "para albergar el 'patrón 42'."
+            #       "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
             return # Salimos de la función patrón 42 y generamos laberinto normal.
 
         if self.width % 2 == 0:
@@ -153,6 +151,16 @@ class MazeGenerator():
             self.grid[y][x] &= ~2
 
     def generate_maze(self):
+        # Esto hace que sea aleatorio cada vez que se genera uno nuevo
+        if self.seed:
+            random.seed(self.seed)
+        else:
+            random.seed()
+        self.grid = [[15 for _ in range(self.width)]
+                     for _ in range(self.height)]
+        self.visited = [[False for _ in range(self.width)]
+                        for _ in range(self.height)]
+
         # 0. Insertar patrón 42
         self.patron_42()
 
