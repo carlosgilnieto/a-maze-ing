@@ -49,18 +49,6 @@ class MazeGenerator():
                               [                (4, 2), (4, 5), (4, 6), (4, 7)]]
 
     @staticmethod
-    def get_config_file() -> str:
-        '''
-        Devuelve el nombre del 1º argumento, que deberia de ser el nombre del archivo de donde sacar
-        las variables de configuracion
-        '''
-        n = len(sys.argv)
-        if n != 2:
-            print_error("run: python3 a_maze_ing.py \"file_name\"")
-            sys.exit()
-        return sys.argv[1]
-
-    @staticmethod
     def get_params() -> dict[dict[str]]:
         mandatory_params = {'WIDTH': "int",
                             'HEIGHT': "int",
