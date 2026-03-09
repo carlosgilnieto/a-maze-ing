@@ -35,7 +35,7 @@ class Draw(Enum):
     POINT=" ■ "
 
 
-def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
+def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
     """
     Devuelve el string para imprimir el resultado.
     Creo que si se quiere animar el recorrido, hay que cambiar el return a un print
@@ -44,6 +44,7 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
     # | ■     | (Line Center de 0,0)
     # +---+---+ (Line Norte de 1,0)
     grid = maze.grid
+    path = maze.path
     color = color.value
     clean_terminal() #Por el momento quita el aviso del patron 42
     display = ""
@@ -70,9 +71,13 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
                 line_center += (Color.RED.value + 
                                 Draw.POINT.value + 
                                 Color.WHITE.value)
+            elif (x, y) in path and show_path: # Solo deberia de pintar el cuadrado si se quiere
+                line_center += (Color.WHITE.value +
+                                Draw.EMPTY_H.value)
             elif grid[y][x] == 15:
-                line_center += (Color.WHITE.value + 
-                                Draw.POINT.value)
+                line_center += (color + 
+                                Draw.POINT.value +
+                                Color.WHITE.value)
             else:
                 line_center += Draw.EMPTY_H.value
 
