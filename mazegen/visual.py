@@ -11,12 +11,12 @@ from .generator import MazeGenerator
 
 
 class Color(Enum):
-    WHITE = "\033[0m"
     BLUE = "\033[34m"
     CYAN = "\033[36m"
     GREEN = "\033[32m"
     YELLOW = "\033[33m"
     RED = "\033[31m"
+    WHITE = "\033[0m"
 
     @staticmethod
     def get_pallete() -> list:

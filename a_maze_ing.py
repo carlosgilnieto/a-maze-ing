@@ -14,21 +14,26 @@ def main():
     maze.generate_maze()
     path = maze.solve_maze()
 
+    #Options
     pallet = Color.get_pallete()
     color_idx = 0
     show_path = True
+    anim_path = False
     msg = ""
     while True:
-        animated_path(maze, path, pallet[color_idx], 0)
-        # print(render_maze(maze, show_path, pallet[color_idx]))
+        if show_path and anim_path:
+            animated_path(maze, path, pallet[color_idx])            
+        else:
+            print(render_maze(maze, show_path, pallet[color_idx]))
         print("=== A-Maze-ing ===")
-        print("1. Re-generate a new maze\n"
-                "2. Show/Hide path from entry to exit\n"
-                "3. Change maze colors\n"
-                "4. Quit\n")
-        option = input("\033[?25h" + msg + "Choise? (1-4):")
-        if not option in ["1", "2", "3", "4"]:
-                msg = "\033[31mSelect a valid option (1-4).\033[0m\n" 
+        print("[1]. Re-generate a new maze\n"
+              "[2]. Show/Hide path from entry to exit\n"
+              "[3]. Toggle path animation\n"
+              "[4]. Change maze colors\n"
+              "[5]. Quit\n")
+        option = input("\033[?25h" + msg + "Choise? (1-5):")
+        if not option in ["1", "2", "3", "4", "5"]:
+                msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
         else:
         #Queda meter que dependiendo de la opcion haga lo que corresponde
             msg = ""
@@ -37,9 +42,16 @@ def main():
                 path = maze.solve_maze()
             elif option == "2": # Show/Hide path
                 show_path = not show_path
-            elif option == "3": # Cambiar color
+                if not show_path:
+                    anim_path = False
+            elif option == "3":
+                if show_path:
+                    anim_path = not anim_path
+                else:
+                    msg = "\033[31mFirst activate show path with option 2.\033[0m\n"
+            elif option == "4": # Cambiar color
                 color_idx = (color_idx + 1) % len(pallet)
-            if option == "4":
+            if option == "5":
                 sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
                 sys.exit()
 
