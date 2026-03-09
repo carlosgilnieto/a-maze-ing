@@ -32,7 +32,8 @@ class Draw(Enum):
     WALL_V= "|" # Wall for East & West
     EMPTY_V= " " # No-Wall for East & West
     CROSS = "+"
-    POINT=" ■ "
+    POINT=" ● "
+    BLOCK=" ■ "
 
 
 def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
@@ -65,18 +66,18 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
                 line_center += Draw.EMPTY_V.value
             if (x, y) == maze.entry:
                 line_center += (Color.GREEN.value + 
-                                Draw.POINT.value + 
+                                Draw.BLOCK.value + 
                                 Color.WHITE.value)
             elif (x, y) == maze.exit:
                 line_center += (Color.RED.value + 
-                                Draw.POINT.value + 
+                                Draw.BLOCK.value + 
                                 Color.WHITE.value)
             elif (x, y) in path and show_path: # Solo deberia de pintar el cuadrado si se quiere
                 line_center += (Color.WHITE.value +
-                                Draw.EMPTY_H.value)
+                                Draw.POINT.value)
             elif grid[y][x] == 15:
                 line_center += (color + 
-                                Draw.POINT.value +
+                                Draw.BLOCK.value +
                                 Color.WHITE.value)
             else:
                 line_center += Draw.EMPTY_H.value
@@ -97,6 +98,13 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
     display += line_final + Color.WHITE.value
     return display
 
+
+def animated_path(maze: MazeGenerator, path: list, color=Color.WHITE, delay=0.1):
+    for i in range(len(path) + 1):
+        step_path = path[:i]
+        maze.path = step_path
+        print(render_maze(maze, True, color))
+        time.sleep(delay)
 
 def disable_cursor():
     print("\033[?25l")

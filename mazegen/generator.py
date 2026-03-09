@@ -24,17 +24,30 @@ class MazeGenerator():
                 print_error(e)
                 sys.exit()
 
-        self.width = config['WIDTH']
-        self.height = config['HEIGHT']
-        self.entry = config['ENTRY']
-        self.exit = config['EXIT']
-        self.output_file = config['OUTPUT_FILE']
-        self.is_perfect = config['PERFECT']
-        self.seed = config.get('SEED')
-        self.grid = []
-        self.visited = []
-        # grid de bools para DFS. De inicio todo en False.
-
+        self.width: int = config['WIDTH']
+        self.height: int = config['HEIGHT']
+        self.entry: tuple = config['ENTRY']
+        self.exit: tuple = config['EXIT']
+        self.output_file: str = config['OUTPUT_FILE']
+        self.is_perfect: bool = config['PERFECT']
+        self.seed: int = config.get('SEED')
+        
+        #DFS
+        self.grid: list = []
+        self.visited: list = []
+        # Mapeo de direcciones y paredes (usando sistema de bits)
+        # Asumiendo los bits estándar: Norte=1, Este=2, Sur=4, Oeste=8
+        # Formato: (DesplX, DesplY, Pared a romper en celda actual (Wall),
+        #           pared a romper en la vecina(opp_wall))
+        self.directions = [
+                (0, -1, 1, 4),  # Norte
+                (1, 0, 2, 8),   # Este
+                (0, 1, 4, 1),   # Sur
+                (-1, 0, 8, 2)   # Oeste
+            ]
+        
+        #Pattern
+        self.protected = set() #Lista de coordenadas que no pueden ser modificadas
         self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
                             [(1, 0),         (1, 2),                 (1, 6)],
                             [(2, 0), (2, 1), (2, 2), (2, 4), (2, 5), (2, 6)],
@@ -45,6 +58,9 @@ class MazeGenerator():
                               [(2, 0), (2, 1), (2, 2), (2, 5), (2, 6), (2, 7)],
                               [                (3, 2), (3, 5)                ],
                               [                (4, 2), (4, 5), (4, 6), (4, 7)]]
+        
+        #BFS
+        self.path: list = []
 
     @staticmethod
     def get_params() -> dict[dict[str]]:
@@ -87,17 +103,13 @@ class MazeGenerator():
                     txt += str(sqr)
                 print(txt)
 
-    def patron_42(self):
+    def pattern_42(self):
         """
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
         if self.width < 8 or self.height < 6:
-            # print("\nSe va a generar un laberinto SIN 'patrón 42'."
-            #       "Esto es porque las dimensiones propuestas son demasiado pequeñas"
-            #       "para albergar el 'patrón 42'."
-            #       "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
-            return # Salimos de la función patrón 42 y generamos laberinto normal.
+           return # Salimos de la función patrón 42 y generamos laberinto normal.
 
         if self.width % 2 == 0:
             pattern = self.par_pattern
@@ -117,7 +129,16 @@ class MazeGenerator():
             for py, px in row:
                 real_x = px + offset_x
                 real_y = py + offset_y
+                if self.entry == (real_x, real_y):
+                    raise ValueError(f"ENTRY={self.entry} "
+                                     "must be outside of the 42 patter, "
+                                     "try other position")
+                elif self.exit == (real_x, real_y):
+                    raise ValueError(f"EXIT={self.exit} "
+                                     "must be outside of the 42 patter, "
+                                     "try other position")
                 pattern_coords.add((real_x, real_y))
+                self.protected.add((real_x, real_y))
 
         # 4. Añadido patrón como visitado.
         for y in range(self.height):
@@ -150,7 +171,7 @@ class MazeGenerator():
             # Está en el borde derecho: romper pared Este: ~0010 => 1101.
             self.grid[y][x] &= ~2
 
-    def generate_maze(self):
+    def generate_maze(self) -> List[List[int]]:
         # Esto hace que sea aleatorio cada vez que se genera uno nuevo
         if self.seed:
             random.seed(self.seed)
@@ -160,21 +181,18 @@ class MazeGenerator():
                      for _ in range(self.height)]
         self.visited = [[False for _ in range(self.width)]
                         for _ in range(self.height)]
+        try:
+            self.pattern_42()
+        except ValueError as e:
+            print_error(e, "Patter Error")
+            sys.exit()
 
-        # 0. Insertar patrón 42
-        self.patron_42()
+        self.grid = self.perfect_maze(self.directions)
+        if not self.is_perfect:
+            return self.non_perfect_maze(self.directions)
+        return self.grid
 
-        # 1. Mapeo de direcciones y paredes (usando sistema de bits)
-        # Asumiendo los bits estándar: Norte=1, Este=2, Sur=4, Oeste=8
-        # Formato: (DesplX, DesplY, Pared a romper en celda actual (Wall),
-        #           pared a romper en la vecina(opp_wall))
-        directions = [
-                (0, -1, 1, 4),  # Norte
-                (1, 0, 2, 8),   # Este
-                (0, 1, 4, 1),   # Sur
-                (-1, 0, 8, 2)   # Oeste
-            ]
-
+    def perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
         # Usar random?? para que sea aleatorio
         start_x, start_y = 0, 0
@@ -218,9 +236,76 @@ class MazeGenerator():
                 # Callejón sin salida: Si no hay vecinos no visitados, eliminamos esta celda de la pila
                 # y el algoritmo retrocede al anterior:
                 stack.pop()
-        # Abrir acceso para Start y Exit
-        self.open_doors(self.entry)
-        self.open_doors(self.exit)
+        return self.grid
+    
+    def non_perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
+        amount_walls: int = (self.width * self.height) // 50
+        attempts = 0
+        while amount_walls > 0 and attempts < 2000:
+            attempts += 1
+            cx = random.randint(1, self.width - 2)
+            cy = random.randint(1, self.height - 2)
+
+            direction = random.choice(directions)
+            dx, dy, wall, opp_wall = direction
+            if (cx, cy) in self.protected:
+                continue
+
+            if self.grid[cy][cx] & wall:
+                nx, ny = cx + dx, cy + dy
+        # 1. Verificar límites del laberinto
+                if (0 <= nx < self.width) and (0 <= ny < self.height):
+                    # 2. Verificar que ninguna esté protegida (Patrón 42)
+                    if (nx, ny) not in self.protected:
+                        self.grid[cy][cx] &= ~wall      # Quita pared en actual
+                        self.grid[ny][nx] &= ~opp_wall  # Quita pared en vecina
+                        amount_walls -= 1
+        return self.grid
+
+    def solve_maze(self) -> List[tuple[int,int]]:
+        #Lista de posiciones que quedan por comprobar
+        queue_pos = [self.entry]
+
+        # came_from sirve como 'visited' y como 'mapa de retorno'
+        # { siguiente celda: celda a mirar }
+        came_from = {self.entry: None}
+        n = 0 #BORRAR
+
+        while queue_pos: #Mientras que queden posiciones por mirar...
+            n += 1 #BORRAR
+            cx, cy = queue_pos.pop(0) #Obtendo los datos de la "primera" que encontre
+            #Al hacer pop desaparece de la lista
+
+            # Compruebo si es el final del maze
+            if (cx, cy) == self.exit:
+                break
+            # Checkea todas las direcciones de la celda para guardar sus posiciones
+            for dx, dy, wall, op_wall in self.directions:
+                nx, ny, = cx + dx, cy + dy
+                if (0 <= nx < self.width) and (0 <= ny < self.height):
+                    # Si la celda que se mira es posible ir
+                    # y tampoco es una celda que ya se haya "visitado" (Evita bucles de pasillos)
+                    if (not (self.grid[cy][cx] & wall)
+                        and (nx, ny) not in came_from):
+                        # Se añade que desde (cx, cy) se puede ir a (nx, ny)
+                        came_from[(nx, ny)] = (cx, cy)
+                        # Se guarda la posicion de (nx, ny) para luego checkear
+                        #a donde se puede ir con ella
+                        queue_pos.append((nx, ny))
+            # print(f"==={n}===") #BORRAR
+            # for pos in came_from: #BORRAR
+            #     print(f"{pos}:{came_from[pos]}") #BORRAR
+            # print(queue) #BORRAR
+
+        #Se ha llegado al final del laberinto y se sabe cual es la ruta
+        path = []
+        current = self.exit
+
+        while current is not None:
+            path.append(current)
+            current = came_from[current]
+        self.path = path[::-1]
+        return self.path
     
     def debug_print_state(self):
         """
@@ -232,4 +317,3 @@ class MazeGenerator():
                 # {:>2} asegura que los números ocupen siempre 2 espacios
                 row_grid += f" {self.grid[y][x]:>2} "
             print(row_grid)
-
