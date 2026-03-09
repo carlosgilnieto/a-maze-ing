@@ -12,25 +12,29 @@ def main():
     filename = sys.argv[1]
     maze = MazeGenerator(filename)
     maze.generate_maze()
+
+    pallet = Color.get_pallete()
+    color_idx = 0
+    msg = ""
     while True:
-        # print(render_maze(maze))
-        maze.debug_print_state()
+        print(render_maze(maze, pallet[color_idx]))
         print("=== A-Maze-ing ===")
-        # print("1. Re-generate a new maze\n"
-        #         "2. Show/Hide path from entry to exit\n"
-        #         "3. Change maze colors\n"
-        #         "4. Quit\n")
-        option = input("Choise? (1-4):")
+        print("1. Re-generate a new maze\n"
+                "2. Show/Hide path from entry to exit\n"
+                "3. Change maze colors\n"
+                "4. Quit\n")
+        option = input("\033[?25h" + msg + "Choise? (1-4):")
         if not option in ["1", "2", "3", "4"]:
-                print("\033[31mSelect a valid option (1-4).\033[0m\n")
+                msg = "\033[31mSelect a valid option (1-4).\033[0m\n" 
         else:
         #Queda meter que dependiendo de la opcion haga lo que corresponde
+            msg = ""
             if option == "1": # Regenerar el maze
                 maze.generate_maze()
             elif option == "2": # Show/Hide path
                 sys.exit()
             elif option == "3": # Cambiar color
-                sys.exit()
+                color_idx = (color_idx + 1) % len(pallet)
             if option == "4":
                 sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
                 sys.exit()
