@@ -144,7 +144,7 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
         #Comprueba si ENTRY y EXIT son distintos
         if config.get('ENTRY', None) == config.get('EXIT', None):
             raise ValueError("The value of ENTRY and EXIT must be different")
-        if config.get('WIDHT') < 8 or config.get('HEIGHT') < 6:
+        if config.get('WIDTH') < 8 or config.get('HEIGHT') < 6:
             print("\033[33mWARNING: Se va a generar un laberinto SIN 'patrón 42'."
                   "Esto es porque las dimensiones propuestas son demasiado pequeñas"
                   "para albergar el 'patrón 42'."
