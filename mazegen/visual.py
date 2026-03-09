@@ -93,32 +93,6 @@ def render_maze(maze: MazeGenerator, color=Color.WHITE) -> str:
     return display
 
 
-def display_options():
-        print("=== A-Maze-ing ===")
-        print("1. Re-generate a new maze\n"
-              "2. Show/Hide path from entry to exit\n"
-              "3. Change maze colors\n"
-              "4. Quit\n")
-        return None
-        # Todo esto de abajo deberia de estar en el script main del programa
-        option = input("Choise? (1-4):")
-        if not option in ["1", "2", "3", "4"]:
-            print("\033[31mSelect a valid option (1-4).\033[0m\n")
-            display_options()
-        else:
-        #Queda meter que dependiendo de la opcion haga lo que corresponde
-            if option == "1": # Regenerar el maze
-                sys.exit()
-            elif option == "2": # Show/Hide path
-                sys.exit()
-            elif option == "3": # Cambiar color
-                sys.exit()
-            if option == "4":
-                clean_terminal()
-                enable_cursor()
-                sys.exit()
-
-
 def disable_cursor():
     print("\033[?25l")
 

@@ -1,3 +1,5 @@
 from .generator import MazeGenerator
-
-__all__ = ["MazeGenerator"]
+from .visual import render_maze, Color
+__all__ = ["MazeGenerator",
+           "render_maze",
+           "Color"]
