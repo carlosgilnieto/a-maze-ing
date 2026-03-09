@@ -1,48 +1,7 @@
 import sys
 from typing import List, Dict, Any, Tuple
+from .errors import error, print_error
 
-# mandatory_params = {'WIDTH': "int",
-#                         'HEIGHT': "int",
-#                         'ENTRY': "tuple",
-#                         'EXIT': "tuple",
-#                         'OUTPUT_FILE': "file",
-#                         'PERFECT': "bool"}
-
-# bonus_params = {"SEED": "int"}
-
-# params = {'mandatory': mandatory_params,
-#               'bonus': bonus_params}
-
-
-#Cambiar Docstrings
-def print_error(msg: str, error_type="Error") -> None:
-    """
-    Imprimir errores que se vean
-    """
-    print(f"\033[41m{error_type}: {msg}.\033[0m")
-
-#Cambiar Dosctrings
-def errors(error_type: str) -> Dict[str, callable]:
-    """
-    Guarda un registro de errores, Creo que es sobre todo con lo relacionado en
-    el parseo, ya que se pueden tener varios errores en el propio archivo
-    """
-    mem = []
-
-    def add_error(msg: str) -> None:
-        mem.append(msg)
-
-    def len_error() -> int:
-        return len(mem)
-
-    def print_all() -> None:
-        for e in mem:
-            print_error(e, error_type)
-        mem.clear()
-
-    return {'add': add_error,
-            'len': len_error,
-            'print': print_all}
 
 #POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
 def get_config_file() -> str:
@@ -55,6 +14,7 @@ def get_config_file() -> str:
         print_error("run: python3 a_maze_ing.py \"file_name\"")
         sys.exit()
     return sys.argv[1]
+
 
 def open_file(file: str) -> str:
     """
@@ -116,8 +76,8 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
             raise ValueError(f"{data_type} has not support")
         
         #Gestor de errores
-    pars_errors = errors("Parsing File")
-    val_errors = errors("Value Error")
+    pars_errors = error("Parsing File")
+    val_errors = error("Value Error")
 
     config: Dict[str: Any] = {}
     #Junta los dos diccionarios para comprobar las KEYS validas
@@ -168,6 +128,7 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         sys.exit()
     else:
         return config
+
     
 def check_config(config: Dict[str, Any], params: Dict) -> bool:
     """
