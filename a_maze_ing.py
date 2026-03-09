@@ -12,6 +12,7 @@ def main():
     filename = sys.argv[1]
     maze = MazeGenerator(filename)
     maze.generate_maze()
+    maze.debug_print_state()
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ def get_config_file() -> str:
         sys.exit()
     return sys.argv[1]
 
-
 def open_file(file: str) -> str:
     """
     Abre el archivo y devuelve lo abierto
@@ -128,7 +127,6 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         sys.exit()
     else:
         return config
-
     
 def check_config(config: Dict[str, Any], params: Dict) -> bool:
     """
@@ -146,12 +144,17 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
         #Comprueba si ENTRY y EXIT son distintos
         if config.get('ENTRY', None) == config.get('EXIT', None):
             raise ValueError("The value of ENTRY and EXIT must be different")
+        if config.get('WIDTH') < 8 or config.get('HEIGHT') < 6:
+            print("\033[33mWARNING: Se va a generar un laberinto SIN 'patrón 42'."
+                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
+                  "para albergar el 'patrón 42'."
+                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\033[0m")
         for key in ['ENTRY', 'EXIT']:
             pos: Tuple = config.get(key, None) # Recoge el valor de la config
             #Comprueba que es los parametros de entry and exit esten dentro del tamaño del laberinto
             if ((pos[0] >= config.get('WIDTH', None) or pos[0] < 0) or
                     (pos[1] >= config.get('HEIGHT', None) or pos[1] < 0)):
                 raise ValueError(f"{key}({pos[0]}, {pos[1]}) "
-                                 "must be between (>0, >0) and "
+                                 "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
         return True

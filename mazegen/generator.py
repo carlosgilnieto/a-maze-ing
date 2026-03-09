@@ -95,10 +95,10 @@ class MazeGenerator():
         Utiliza códigos ANSI para darle color.
         """
         if self.width < 8 or self.height < 6:
-            print("\nSe va a generar un laberinto SIN 'patrón 42'."
-                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
-                  "para albergar el 'patrón 42'."
-                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
+            # print("\nSe va a generar un laberinto SIN 'patrón 42'."
+            #       "Esto es porque las dimensiones propuestas son demasiado pequeñas"
+            #       "para albergar el 'patrón 42'."
+            #       "Tamaño míninmo: WIDTH=8, HEIGHT=6\n")
             return # Salimos de la función patrón 42 y generamos laberinto normal.
 
         if self.width % 2 == 0:
