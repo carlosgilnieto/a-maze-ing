@@ -137,7 +137,7 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
     required: List[str] = params.get('mandatory').keys()
     missing: List = []
     for key in required:
-        if not config.get(key, None):
+        if config.get(key, None) is None:
             missing.append(key)
     if missing:
         missing = ", ".join(missing)
@@ -152,6 +152,6 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
             if ((pos[0] >= config.get('WIDTH', None) or pos[0] < 0) or
                     (pos[1] >= config.get('HEIGHT', None) or pos[1] < 0)):
                 raise ValueError(f"{key}({pos[0]}, {pos[1]}) "
-                                 "must be between (>0, >0) and "
+                                 "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
         return True
