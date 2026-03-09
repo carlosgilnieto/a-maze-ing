@@ -24,17 +24,17 @@ class MazeGenerator():
                 print_error(e)
                 sys.exit()
 
-        self.width = config['WIDTH']
-        self.height = config['HEIGHT']
-        self.entry = config['ENTRY']
-        self.exit = config['EXIT']
-        self.output_file = config['OUTPUT_FILE']
-        self.is_perfect = config['PERFECT']
-        self.seed = config.get('SEED')
-        self.grid = []
-        self.protected = set() #Lista de coordenadas que no pueden ser modificadas
-        self.visited = []
+        self.width: int = config['WIDTH']
+        self.height: int = config['HEIGHT']
+        self.entry: tuple = config['ENTRY']
+        self.exit: tuple = config['EXIT']
+        self.output_file: str = config['OUTPUT_FILE']
+        self.is_perfect: bool = config['PERFECT']
+        self.seed: int = config.get('SEED')
         
+        #DFS
+        self.grid: list = []
+        self.visited: list = []
         # Mapeo de direcciones y paredes (usando sistema de bits)
         # Asumiendo los bits estándar: Norte=1, Este=2, Sur=4, Oeste=8
         # Formato: (DesplX, DesplY, Pared a romper en celda actual (Wall),
@@ -45,6 +45,9 @@ class MazeGenerator():
                 (0, 1, 4, 1),   # Sur
                 (-1, 0, 8, 2)   # Oeste
             ]
+        
+        #Pattern
+        self.protected = set() #Lista de coordenadas que no pueden ser modificadas
         self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
                             [(1, 0),         (1, 2),                 (1, 6)],
                             [(2, 0), (2, 1), (2, 2), (2, 4), (2, 5), (2, 6)],
@@ -55,6 +58,9 @@ class MazeGenerator():
                               [(2, 0), (2, 1), (2, 2), (2, 5), (2, 6), (2, 7)],
                               [                (3, 2), (3, 5)                ],
                               [                (4, 2), (4, 5), (4, 6), (4, 7)]]
+        
+        #BFS
+        self.path: list = []
 
     @staticmethod
     def get_params() -> dict[dict[str]]:
@@ -181,10 +187,10 @@ class MazeGenerator():
             print_error(e, "Patter Error")
             sys.exit()
 
-        grid = self.perfect_maze(self.directions)
+        self.grid = self.perfect_maze(self.directions)
         if not self.is_perfect:
             return self.non_perfect_maze(self.directions)
-        return grid
+        return self.grid
 
     def perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
@@ -254,6 +260,7 @@ class MazeGenerator():
                         self.grid[cy][cx] &= ~wall      # Quita pared en actual
                         self.grid[ny][nx] &= ~opp_wall  # Quita pared en vecina
                         amount_walls -= 1
+        return self.grid
 
     def solve_maze(self) -> List[tuple[int,int]]:
         #Lista de posiciones que quedan por comprobar
@@ -265,7 +272,7 @@ class MazeGenerator():
         n = 0 #BORRAR
 
         while queue_pos: #Mientras que queden posiciones por mirar...
-            n += 1
+            n += 1 #BORRAR
             cx, cy = queue_pos.pop(0) #Obtendo los datos de la "primera" que encontre
             #Al hacer pop desaparece de la lista
 
@@ -285,21 +292,20 @@ class MazeGenerator():
                         # Se guarda la posicion de (nx, ny) para luego checkear
                         #a donde se puede ir con ella
                         queue_pos.append((nx, ny))
-            # print(f"==={n}===")
-            # for pos in came_from:
-            #     print(f"{pos}:{came_from[pos]}")
-            # print(queue)
+            # print(f"==={n}===") #BORRAR
+            # for pos in came_from: #BORRAR
+            #     print(f"{pos}:{came_from[pos]}") #BORRAR
+            # print(queue) #BORRAR
 
         #Se ha llegado al final del laberinto y se sabe cual es la ruta
-        
         path = []
         current = self.exit
 
         while current is not None:
             path.append(current)
             current = came_from[current]
-        print(path)
-        return path[::-1]
+        self.path = path[::-1]
+        return self.path
     
     def debug_print_state(self):
         """
