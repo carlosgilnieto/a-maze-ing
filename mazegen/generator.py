@@ -108,7 +108,7 @@ class MazeGenerator():
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
-        if self.width < 8 or self.height < 6:
+        if self.width < 9 or self.height < 8:
            return # Salimos de la función patrón 42 y generamos laberinto normal.
 
         if self.width % 2 == 0:

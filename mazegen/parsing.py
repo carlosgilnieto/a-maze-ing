@@ -144,9 +144,12 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
         raise ValueError(f"Key missing ({missing})")
     else:
         #Comprueba que se pueda imprimir el patron 42
-        if config.get('WIDTH') < 8 or config.get('HEIGHT') < 6:
+        if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
             print("\033[33mWARNING: A maze will be generated WITHOUT ‘pattern 42’.\n"
-                  "Minimum size: WIDTH=8, HEIGHT=6\033[0m")
+                  "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
+            option = input("Continue? (y/n): ")
+            if option != "y":
+                sys.exit()
         if config.get('WIDTH') < 1:
             raise ValueError("Recomended minimun size: WIDTH=2")
         if config.get('HEIGHT') < 1:
