@@ -1,6 +1,5 @@
-from .generator import MazeGenerator
 from typing import List
-
+from .generator import MazeGenerator
 
 def int_to_hex(maze: List[List[int]]) -> List[List[str]]:
     """ Pasa de un 'grid' en Decimal a Hexadecimal"""
@@ -29,14 +28,14 @@ def generate_output(maze: MazeGenerator) -> None:
     maze_hex = int_to_hex(maze.grid)
     maze_txt = hex_to_str(maze_hex)
     #Cambiar por value de dic
-    config = {'ENTRY': maze.entry,
-              'EXIT': maze.exit,
-              'OUTPUT_FILE': maze.output}
-    with open(config['OUTPUT_FILE'], 'w') as output:
+    output_data = {'ENTRY': maze.entry,
+                   'EXIT': maze.exit,
+                   'OUTPUT_FILE': maze.output_file}
+    with open(output_data['OUTPUT_FILE'], 'w') as output:
         #Añade el laberinto al output.txt
         output.write(maze_txt)
         output.write("\n")
         #Añade el entry y exit al output.txt
-        output.write(f"{config['ENTRY'][0]},{config['ENTRY'][1]}\n")
-        output.write(f"{config['EXIT'][0]},{config['EXIT'][1]}\n")
+        output.write(f"{output_data['ENTRY'][0]},{output_data['ENTRY'][1]}\n")
+        output.write(f"{output_data['EXIT'][0]},{output_data['EXIT'][1]}\n")
 

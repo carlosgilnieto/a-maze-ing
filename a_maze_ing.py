@@ -1,5 +1,5 @@
 import sys
-from mazegen import MazeGenerator, animated_path, render_maze, Color
+from mazegen import MazeGenerator, generate_output, animated_path, render_maze, Color
 
 
 def main():
@@ -8,10 +8,11 @@ def main():
     if n != 2:
         print("\033[31mrun: python3 a_maze_ing.py \"file_name\"\033[0m")
         sys.exit()
-
     filename = sys.argv[1]
+
     maze = MazeGenerator(filename)
-    grid = maze.generate_maze()
+    maze.generate_maze()
+    generate_output(maze)
     path = maze.solve_maze()
 
     #Options
@@ -44,6 +45,7 @@ def main():
                 msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
             if option == "1": # Regenerar el maze
                 maze.generate_maze()
+                generate_output(maze)
                 path = maze.solve_maze()
                 aux_anim = True
             elif option == "2": # Show/Hide path
