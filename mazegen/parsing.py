@@ -141,14 +141,18 @@ def check_config(config: Dict[str, Any], params: Dict) -> bool:
         missing = ", ".join(missing)
         raise ValueError(f"Key missing ({missing})")
     else:
+        #Comprueba que se pueda imprimir el patron 42
+        if config.get('WIDTH') < 8 or config.get('HEIGHT') < 6:
+            print("\033[33mWARNING: A maze will be generated WITHOUT ‘pattern 42’.\n"
+                  "Minimum size: WIDTH=8, HEIGHT=6\033[0m")
+        if config.get('WIDTH') < 1:
+            raise ValueError("Recomended minimun size: WIDTH=2")
+        if config.get('HEIGHT') < 1:
+            raise ValueError("Recomended minimun size: HEIGHT=2")
         #Comprueba si ENTRY y EXIT son distintos
         if config.get('ENTRY', None) == config.get('EXIT', None):
             raise ValueError("The value of ENTRY and EXIT must be different")
-        if config.get('WIDTH') < 8 or config.get('HEIGHT') < 6:
-            print("\033[33mWARNING: Se va a generar un laberinto SIN 'patrón 42'."
-                  "Esto es porque las dimensiones propuestas son demasiado pequeñas"
-                  "para albergar el 'patrón 42'."
-                  "Tamaño míninmo: WIDTH=8, HEIGHT=6\033[0m")
+        #Comprueba si ENTRY Y EXIT están dentro del laberinto
         for key in ['ENTRY', 'EXIT']:
             pos: Tuple = config.get(key, None) # Recoge el valor de la config
             #Comprueba que es los parametros de entry and exit esten dentro del tamaño del laberinto
