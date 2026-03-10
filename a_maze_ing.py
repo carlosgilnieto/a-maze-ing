@@ -12,7 +12,6 @@ def main():
 
     maze = MazeGenerator(filename)
     maze.generate_maze()
-    generate_output(maze)
     path = maze.solve_maze()
 
     #Options
@@ -28,6 +27,7 @@ def main():
             animated_path(maze, path, pallet[color_idx])
         else:
             print(render_maze(maze, show_path, pallet[color_idx]))
+        generate_output(maze)
         print("=== A-Maze-ing ===")
         print("[1]. Re-generate a new maze\n"
               f"[2]. {'Hide' if show_path else 'Show'} path from entry to exit\n"
@@ -45,8 +45,8 @@ def main():
                 msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
             if option == "1": # Regenerar el maze
                 maze.generate_maze()
-                generate_output(maze)
                 path = maze.solve_maze()
+                generate_output(maze)
                 aux_anim = True
             elif option == "2": # Show/Hide path
                 show_path = not show_path

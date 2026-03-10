@@ -104,6 +104,25 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
 
 
 def animated_path(maze: MazeGenerator, path: list, color=Color.WHITE, delay=0.1):
+    """Animates the solution path of the maze in the terminal.
+
+    Iteratively updates the maze's path and renders it to create a visual 
+    animation. It temporarily disables terminal echo to prevent user input 
+    from interfering with the display.
+
+    Args:
+        maze (MazeGenerator): The maze object instance to be rendered.
+        path (list): A list of tuples [(x, y), ...] representing the coordinates 
+            of the solution path.
+        color (Color, optional): The color of the maze walls and path. 
+            Defaults to Color.WHITE.
+        delay (float, optional): Time in seconds to wait between each frame 
+            of the animation. Defaults to 0.1.
+
+    Raises:
+        Any exception raised during rendering will be caught to ensure the 
+        terminal settings are restored in the 'finally' block.
+    """
     try:
         toggle_terminal(False)
         for i in range(len(path) + 1):
