@@ -4,7 +4,7 @@ def print_error(msg: str, error_type="Error") -> None:
     """
     Imprimir errores que se vean
     """
-    print(f"\033[31m{error_type}: {msg}.\033[0m")
+    print(f"\033[41m{error_type}: {msg}.\033[0m")
 
 #Cambiar Dosctrings
 def error(error_type: str) -> dict[str, callable]:
