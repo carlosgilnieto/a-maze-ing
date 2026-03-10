@@ -1,6 +1,7 @@
 import time
-# time.sleep(0.5)
 import sys
+import termios
+import tty
 from enum import Enum
 from .generator import MazeGenerator
 
@@ -20,7 +21,9 @@ class Color(Enum):
 
     @staticmethod
     def get_pallete() -> list:
-        return [c for c in Color]
+        return [c 
+                for c in Color 
+                if not c == Color.WHITE]
 
 
 class Draw(Enum):
@@ -100,11 +103,35 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
 
 
 def animated_path(maze: MazeGenerator, path: list, color=Color.WHITE, delay=0.1):
-    for i in range(len(path) + 1):
-        step_path = path[:i]
-        maze.path = step_path
-        print(render_maze(maze, True, color))
-        time.sleep(delay)
+    try:
+        toggle_terminal(False)
+        for i in range(len(path) + 1):
+            step_path = path[:i]
+            maze.path = step_path
+            print(render_maze(maze, True, color))
+            time.sleep(delay)
+        flush_input()
+    finally:
+        toggle_terminal(True)
+
+
+def toggle_terminal(enable: bool) -> None:
+    # ~termios.ECHO -> Lo que se escribe con teclado por pantalla no se ve
+    # ~termios.ICANON -> Desactiva que puedas enviar datos al pulsar enter
+    # tcsadrain -> Los cambios en la terminal se aplican despues de imprimir todo
+    fd = sys.stdin.fileno()
+    settings = termios.tcgetattr(fd)
+    # Se hace un toggle del bit que esta en fd[3]
+    if enable:
+        settings[3] = settings[3] | termios.ECHO | termios.ICANON
+    else:
+        settings[3] = settings[3] & ~termios.ECHO & ~termios.ICANON
+    termios.tcsetattr(fd, termios.TCSADRAIN, settings)
+
+
+def flush_input() -> None:
+    # tcflush -> Vacia la espera de texto
+    termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
 def disable_cursor():
     print("\033[?25l")
