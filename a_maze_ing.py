@@ -53,6 +53,7 @@ def main():
             elif option == "3":
                 if show_path:
                     anim_path = not anim_path
+                    aux_anim = True
                 else:
                     msg = "\033[31mFirst activate 'show path' with option 2.\033[0m\n"
             elif option == "4": # Cambiar color

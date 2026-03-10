@@ -12,9 +12,11 @@ from .generator import MazeGenerator
 
 
 class Color(Enum):
-    BLUE = "\033[34m"
-    CYAN = "\033[36m"
+    BLACK = "\033[30m"
     GREEN = "\033[32m"
+    CYAN = "\033[36m"
+    BLUE = "\033[34m"
+    PURPLE = "\033[35m"
     YELLOW = "\033[33m"
     RED = "\033[31m"
     WHITE = "\033[0m"
@@ -35,7 +37,6 @@ class Draw(Enum):
     WALL_V= "|" # Wall for East & West
     EMPTY_V= " " # No-Wall for East & West
     CROSS = "+"
-    POINT=" ● "
     BLOCK=" ■ "
 
 
@@ -77,7 +78,7 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
                                 Color.WHITE.value)
             elif (x, y) in path and show_path: # Solo deberia de pintar el cuadrado si se quiere
                 line_center += (Color.WHITE.value +
-                                Draw.POINT.value)
+                                Draw.BLOCK.value)
             elif grid[y][x] == 15:
                 line_center += (color + 
                                 Draw.BLOCK.value +
