@@ -1,4 +1,4 @@
-from typing import List, Any, Dict, Generator
+from typing import List, Any, Dict, Tuple, Generator
 from .errors import error, error_format
 from .parsing import get_config_from_file, check_42_pattern
 import random
@@ -180,7 +180,9 @@ class MazeGenerator():
         """
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
         # Usar random?? para que sea aleatorio
-        start_x, start_y = 0, 0
+        # start_x, start_y = 0, 0
+        start_x, start_y = self.__get_valid_random_point()
+
         self.__visited[start_y][start_x] = True  # Celda de inicio visitada.
         # "pila" (stack) nos servirá para retroceder (backtrack)
         stack = [(start_x, start_y)]
@@ -319,6 +321,14 @@ class MazeGenerator():
         """Cuenta cuantos 1 hay en la celda"""
         cell = self.__grid[y][x]
         return bin(cell).count('1')
+
+    def __get_valid_random_point(self) -> Tuple[int]:
+        while True:
+            x = random.randint(0, self.width - 1)
+            y = random.randint(0, self.height - 1)
+
+            if (x, y) not in self.__protected:
+                return (x, y)
 
     def open_doors(self, pos: tuple):
         """
