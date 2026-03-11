@@ -1,5 +1,5 @@
 from typing import List, Any, Tuple, Dict
-from .errors import print_error, error
+from .errors import print_error, error, error_format
 from .parsing import get_config_from_file, check_42_pattern
 import random
 import sys
@@ -79,51 +79,17 @@ class MazeGenerator():
         Genera un objeto maze apartid de un archivo
         """
         config: Dict[str, Any] = get_config_from_file(filename)
-        # if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
-        #     print("\033[33mWARNING: A maze will be generated "
-        #           "WITHOUT ‘pattern 42’.\n"
-        #           "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
-        #     option = input("Continue? (y/n): ")
-        #     if option != "y":
-        #         sys.exit()
         config = {k.lower(): v
                   for k, v in config.items()}
         maze: MazeGenerator = cls(**config)
         return maze
-    
-    
-    def get_center(self) -> Tuple:
-        """
-        Te devuelve la coordenada del centro del grid
-        Para usar división entera y que no haya float, con doble barra:
-        """
-        return (self.width // 2, self.height // 2)
-
-    #BORRAR
-    def check_maze(self, maze: List[List[Any]], debug=False):
-        center = self.get_center()
-        print(f"Center: {center}")
-        if debug:
-            for y, line in enumerate(maze, 1):
-                txt = ""
-                for x, sqr in enumerate(line, 1):
-                    if sqr is False:
-                        txt += "\033[40m0\033[0m"
-                    else:
-                        txt += "\033[43m1\033[0m"
-                print(txt)
-        else:
-            for line in maze:
-                txt = ""
-                for sqr in line:
-                    txt += str(sqr)
-                print(txt)
 
     def pattern_42(self):
         """
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
+        pattern_error = error("PATTERN ERROR")
         if self.width < 9 or self.height < 8:
            return # Salimos de la función patrón 42 y generamos laberinto normal.
 
@@ -146,15 +112,20 @@ class MazeGenerator():
                 real_x = px + offset_x
                 real_y = py + offset_y
                 if self.entry == (real_x, real_y):
-                    raise ValueError(f"ENTRY={self.entry} "
-                                     "must be outside of the 42 patter, "
-                                     "try other position")
-                elif self.exit == (real_x, real_y):
-                    raise ValueError(f"EXIT={self.exit} "
-                                     "must be outside of the 42 patter, "
-                                     "try other position")
+                    pattern_error['add'](f"ENTRY={self.entry} "
+                                         "must be outside of the 42 patter, "
+                                         "try other position")
+                if self.exit == (real_x, real_y):
+                    pattern_error['add'](f"EXIT={self.exit} "
+                                         "must be outside of the 42 patter, "
+                                         "try other position")
                 pattern_coords.add((real_x, real_y))
                 self.protected.add((real_x, real_y))
+
+        #Printea errores
+        if pattern_error['len']() > 0:
+            pattern_error['print']()
+            raise MazeError()
 
         # 4. Añadido patrón como visitado.
         for y in range(self.height):
@@ -200,8 +171,7 @@ class MazeGenerator():
         try:
             self.pattern_42()
         except ValueError as e:
-            print_error(e, "Patter Error")
-            sys.exit()
+            raise MazeError(error_format(e, "Patter Error"))
 
         self.grid = self.perfect_maze(self.directions)
         if not self.is_perfect:

@@ -6,6 +6,11 @@ def print_error(msg: str, error_type="Error") -> None:
     """
     print(f"\033[31m{error_type}: {msg}.\033[0m")
 
+
+def error_format(msg: str, error_type="Error") -> str:
+    return f"\033[31m{error_type}: {msg}.\033[0m"
+
+
 #Cambiar Dosctrings
 def error(error_type: str) -> dict[str, callable]:
     """
