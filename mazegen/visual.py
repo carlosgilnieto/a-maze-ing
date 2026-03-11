@@ -71,14 +71,14 @@ def _render_row(maze: MazeGenerator, y: int,
     """
     line_north = ""
     line_center = ""
-
+    grid = maze.get_grid()
     for x in range(maze.width):
         line_north += paint(Draw.CROSS, color)  # Pinta las esquina
-        if maze.grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
+        if grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
             line_north += paint(Draw.WALL_H, color)
         else:
             line_north += Draw.EMPTY_H.value
-        if maze.grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
+        if grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
             line_center += paint(Draw.WALL_V, color)
         else:
             line_center += paint(Draw.EMPTY_V, color)
@@ -86,7 +86,7 @@ def _render_row(maze: MazeGenerator, y: int,
 
     # Cierre del borde derecha
     line_north += paint(Draw.CROSS, color) # Añade el ultimo cross
-    if maze.grid[y][maze.width - 1] & 2:
+    if grid[y][maze.width - 1] & 2:
         line_center += paint(Draw.WALL_V, color)
         # line_center += color + Draw.WALL_V.value + Color.RESET.value
     return f"{line_north}\n{line_center}\n"
@@ -98,6 +98,7 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     Al pasar la posicion en el grid de una celda devuelve el contenido de ella
     para imprimir
     """
+    grid = maze.get_grid()
     # Capa 0 (Solo cuando se genera el laberinto)
     if stack:
         if (x, y) == stack[-1]:
@@ -110,10 +111,10 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     if (x, y) == maze.exit:
         return paint(Draw.BLOCK, Color.RED)
     # Paredes cerradas
-    if maze.grid[y][x] == 15:
+    if grid[y][x] == 15:
         return paint(Draw.BLOCK, color)
     # Path
-    if show_path and maze.path and (x, y) in maze.path:
+    if show_path and maze.get_path() and (x, y) in maze.get_path():
         return paint(Draw.BLOCK, Color.RESET)
     # Resto
     return paint(Draw.EMPTY_H, Color.RESET)
@@ -175,7 +176,7 @@ def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1)
         toggle_terminal(False)
         for i in range(len(path) + 1):
             step_path = path[:i]
-            maze.path = step_path
+            maze.__path = step_path
             print(render_grid(maze, True, color))
             time.sleep(delay)
         flush_input()

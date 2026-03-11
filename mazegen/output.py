@@ -42,9 +42,9 @@ def dir_to_path(path: List[tuple]) -> str:
 
 #Esto esta pensado para que directamente vaya en la clase MazeGenerator
 def generate_output(maze: MazeGenerator) -> None:
-    maze_hex = int_to_hex(maze.grid)
+    maze_hex = int_to_hex(maze.get_grid())
     maze_txt = hex_to_str(maze_hex)
-    maze_path = dir_to_path(maze.path)
+    maze_path = dir_to_path(maze.get_path())
     #Cambiar por value de dic
     output_data = {'ENTRY': maze.entry,
                    'EXIT': maze.exit,
@@ -58,8 +58,3 @@ def generate_output(maze: MazeGenerator) -> None:
         output.write(f"{output_data['ENTRY'][0]},{output_data['ENTRY'][1]}\n")
         output.write(f"{output_data['EXIT'][0]},{output_data['EXIT'][1]}\n")
         output.write(f"{output_data['PATH']}\n")
-
-if __name__ == "__main__":
-    path = [(1, 2), (1, 1), 
-            (1, 0), (2, 0), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (7, 1), (8, 1), (8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8), (8, 9)]
-    print(dir_to_path(path))
