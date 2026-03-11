@@ -1,4 +1,4 @@
-from typing import List, Any, Tuple, Dict
+from typing import List, Any, Dict, Generator
 from .errors import print_error, error, error_format
 from .parsing import get_config_from_file, check_42_pattern
 import random
@@ -158,7 +158,7 @@ class MazeGenerator():
             # Está en el borde derecho: romper pared Este: ~0010 => 1101.
             self.grid[y][x] &= ~2
 
-    def generate_maze(self) -> List[List[int]]:
+    def reset_maze(self) -> List[List[int]]:
         # Esto hace que sea aleatorio cada vez que se genera uno nuevo
         if self.seed:
             random.seed(self.seed)
@@ -172,13 +172,9 @@ class MazeGenerator():
             self.pattern_42()
         except ValueError as e:
             raise MazeError(error_format(e, "Patter Error"))
-
-        self.grid = self.perfect_maze(self.directions)
-        if not self.is_perfect:
-            return self.non_perfect_maze(self.directions)
         return self.grid
 
-    def perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
+    def perfect_maze(self, directions: List[tuple]) -> Generator:
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
         # Usar random?? para que sea aleatorio
         start_x, start_y = 0, 0
@@ -218,11 +214,13 @@ class MazeGenerator():
 
                 self.visited[ny][nx] = True
                 stack.append((nx, ny))
+                yield self.grid
             else:
                 # Callejón sin salida: Si no hay vecinos no visitados, eliminamos esta celda de la pila
                 # y el algoritmo retrocede al anterior:
                 stack.pop()
-        return self.grid
+                yield self.grid
+        yield self.grid
     
     def non_perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
         amount_walls: int = (self.width * self.height) // 50

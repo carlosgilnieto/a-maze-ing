@@ -19,13 +19,13 @@ class Color(Enum):
     PURPLE = "\033[35m"
     YELLOW = "\033[33m"
     RED = "\033[31m"
-    WHITE = "\033[0m"
+    RESET = "\033[0m"
 
     @staticmethod
     def get_pallete() -> list:
-        return [c 
-                for c in Color 
-                if not c == Color.WHITE]
+        return [c
+                for c in Color
+                if not c == Color.RESET]
 
 
 class Draw(Enum):
@@ -40,7 +40,7 @@ class Draw(Enum):
     BLOCK=" ■ "
 
 
-def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
+def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK) -> str:
     """
     Devuelve el string para imprimir el resultado.
     Creo que si se quiere animar el recorrido, hay que cambiar el return a un print
@@ -48,62 +48,79 @@ def render_maze(maze: MazeGenerator, show_path: bool, color=Color.WHITE) -> str:
     # +---+---+ (Line Norte de 0,0)
     # | ■     | (Line Center de 0,0)
     # +---+---+ (Line Norte de 1,0)
-    grid = maze.grid
-    path = maze.path
-    color = color.value
-    clean_terminal() #Por el momento quita el aviso del patron 42
-    display = ""
+
+    color = color.value #Por el momento quita el aviso del patron 42
+    display = []
     for y in range(maze.height):
-        line_north = color
-        line_center = ""
-        for x in range(maze.width):
-            line_north += Draw.CROSS.value # Pinta las esquinas
-            if grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
-                line_north += Draw.WALL_H.value
-            else:
-                line_north += Draw.EMPTY_H.value
-            if grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
-                line_center += (color + 
-                                Draw.WALL_V.value + 
-                                Color.WHITE.value)
-            else:
-                line_center += Draw.EMPTY_V.value
-            if (x, y) == maze.entry:
-                line_center += (Color.GREEN.value + 
-                                Draw.BLOCK.value + 
-                                Color.WHITE.value)
-            elif (x, y) == maze.exit:
-                line_center += (Color.RED.value + 
-                                Draw.BLOCK.value + 
-                                Color.WHITE.value)
-            elif (x, y) in path and show_path: # Solo deberia de pintar el cuadrado si se quiere
-                line_center += (Color.WHITE.value +
-                                Draw.BLOCK.value)
-            elif grid[y][x] == 15:
-                line_center += (color + 
-                                Draw.BLOCK.value +
-                                Color.WHITE.value)
-            else:
-                line_center += Draw.EMPTY_H.value
+        display.append(_render_row(maze, y, show_path, color))
 
-        # Cierre del borde derecha
-        line_north += Draw.CROSS.value # Añade el ultimo cross
-        if grid[y][maze.width - 1] & 2:
-            line_center += color + Draw.WALL_V.value + Color.WHITE.value
-        # Junta todas las lines para pintar la celda
-        display += line_north + "\n" + line_center + "\n"
-    
     #Cierre de la pared de abajo
-    line_final = color
+    line_final = (color +
+                  (Draw.CROSS.value + Draw.WALL_H.value) * maze.width)
+    line_final += Draw.CROSS.value + Color.RESET.value
+    display.append(line_final)
+    return "".join(display)
+
+
+def _get_cell_content(maze: MazeGenerator, x: int, y: int,
+                      show_path: bool, color: Color) -> str:
+    """
+    Al pasar la posicion en el grid de una celda devuelve el contenido de ella
+    para imprimir
+    """
+    if (x, y) == maze.entry:
+        return f"{Color.GREEN.value}{Draw.BLOCK.value}{Color.RESET.value}"
+    if (x, y) == maze.exit:
+        return f"{Color.RED.value}{Draw.BLOCK.value}{Color.RESET.value}"
+    if show_path and (x, y) in maze.path:
+        return f"{Color.RESET.value}{Draw.BLOCK.value}"
+    return Draw.EMPTY_H.value
+    if maze.grid[y][x] == 15:
+        return f"{color}{Draw.BLOCK.value}{Color.RESET.value}"
+
+
+def _render_row(maze: MazeGenerator, y: int,
+                show_path: bool, color: Color) -> str:
+    line_north = color
+    line_center = ""
+
     for x in range(maze.width):
-        line_final += Draw.CROSS.value
-        line_final += Draw.WALL_H.value
-    line_final += Draw.CROSS.value
-    display += line_final + Color.WHITE.value
-    return display
+        line_north += Draw.CROSS.value  # Pinta las esquina
+        if maze.grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
+            line_north += Draw.WALL_H.value
+        else:
+            line_north += Draw.EMPTY_H.value
+        if maze.grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
+            line_center += (color +
+                            Draw.WALL_V.value +
+                            Color.RESET.value)
+        else:
+            line_center += Draw.EMPTY_V.value
+        line_center += _get_cell_content(maze, x, y, show_path, color)
 
+    # Cierre del borde derecha
+    line_north += Draw.CROSS.value # Añade el ultimo cross
+    if maze.grid[y][maze.width - 1] & 2:
+        line_center += color + Draw.WALL_V.value + Color.RESET.value
+    return f"{line_north}\n{line_center}\n"
 
-def animated_path(maze: MazeGenerator, path: list, color=Color.WHITE, delay=0.1):
+def animated_generator(maze: MazeGenerator, color=Color.BLACK) -> None:
+    try:
+        maze.reset_maze()
+        maze.debug_print_state()
+        if maze.is_perfect:
+            generator = maze.perfect_maze(maze.directions)
+        else:
+            generator = maze.non_perfect_maze(maze.directions)
+    except Exception:
+        print("error")
+        sys.exit()
+    for current in generator:
+        clean_terminal()
+        print(render_maze(maze))
+        time.sleep(0.1)
+
+def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
     """Animates the solution path of the maze in the terminal.
 
     Iteratively updates the maze's path and renders it to create a visual 
@@ -153,14 +170,15 @@ def flush_input() -> None:
     # tcflush -> Vacia la espera de texto
     termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
+
 def disable_cursor():
-    print("\033[?25l")
+    sys.stdout.write("\033[?25l")
 
 
 def enable_cursor():
-    print("\033[?25h")
+    sys.stdout.write("\033[?25h")
 
 
 def clean_terminal() -> str:
-    sys.stdout.write("\033[2J\033[3J\033[H\033[?25l")
-
+    # \033[?25l
+    sys.stdout.write("\033[2J\033[3J\033[H")
