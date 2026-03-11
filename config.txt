@@ -4,5 +4,5 @@ ENTRY=1,2
 EXIT=8,9
 OUTPUT_FILE=maze.txt
 PERFECT=True
-# SEED=42 # Optional
-SPEED_ANIMATION=0.01 # Optional
+SEED=42 # Optional
+SPEED_ANIMATION=0.1 # Optional

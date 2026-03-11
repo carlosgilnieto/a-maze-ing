@@ -13,7 +13,6 @@ class MazeGenerator():
                  entry: tuple, exit: tuple, seed=0,
                  perfect=True, output_file="maze.txt",
                  speed_animation=0):
-        # print(f"h:{width}, w:{height}, \nentry:{entry}, exit:{exit}, \nperfect:{perfect}, \nfile:{output_file}, seed:{seed}")
         value_error = error("MAZE ERROR")
         if width < 1:
             value_error['add']("Recomended minimun size: WIDTH=2")
@@ -94,6 +93,9 @@ class MazeGenerator():
     def get_path(self):
         return self.__path
 
+    def set_path(self, path: List[Tuple]):
+        self.__path = path
+
     def _set_pattern_42(self) -> None:
         """
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
@@ -153,9 +155,9 @@ class MazeGenerator():
         else:
             random.seed()
         self.__grid = [[15 for _ in range(self.width)]
-                     for _ in range(self.height)]
+                       for _ in range(self.height)]
         self.__visited = [[False for _ in range(self.width)]
-                        for _ in range(self.height)]
+                          for _ in range(self.height)]
         try:
             self._set_pattern_42()
         except ValueError as e:
@@ -269,7 +271,7 @@ class MazeGenerator():
 
         yield self.__grid, []
 
-    def calculate_path(self) -> List[tuple[int, int]]:
+    def calculate_path(self) -> Generator:
         """
         Algortimo BFS
         """
@@ -279,10 +281,8 @@ class MazeGenerator():
         # came_from sirve como 'visited' y como 'mapa de retorno'
         # { siguiente celda: celda a mirar }
         came_from = {self.entry: None}
-        n = 0 #BORRAR
 
         while queue_pos: #Mientras que queden posiciones por mirar...
-            n += 1 #BORRAR
             cx, cy = queue_pos.pop(0) #Obtendo los datos de la "primera" que encontre
             #Al hacer pop desaparece de la lista
 
@@ -290,7 +290,7 @@ class MazeGenerator():
             if (cx, cy) == self.exit:
                 break
             # Checkea todas las direcciones de la celda para guardar sus posiciones
-            for dx, dy, wall, op_wall in self.__directions:
+            for dx, dy, wall, _ in self.__directions:
                 nx, ny, = cx + dx, cy + dy
                 if (0 <= nx < self.width) and (0 <= ny < self.height):
                     # Si la celda que se mira es posible ir
@@ -302,10 +302,7 @@ class MazeGenerator():
                         # Se guarda la posicion de (nx, ny) para luego checkear
                         #a donde se puede ir con ella
                         queue_pos.append((nx, ny))
-            # print(f"==={n}===") #BORRAR
-            # for pos in came_from: #BORRAR
-            #     print(f"{pos}:{came_from[pos]}") #BORRAR
-            # print(queue) #BORRAR
+                        yield came_from, (nx, ny)
 
         #Se ha llegado al final del laberinto y se sabe cual es la ruta
         path = []
@@ -315,7 +312,6 @@ class MazeGenerator():
             path.append(current)
             current = came_from[current]
         self.__path = path[::-1]
-        return self.__path
 
     def __count_walls(self, x: int, y: int) -> int:
         """Cuenta cuantos 1 hay en la celda"""

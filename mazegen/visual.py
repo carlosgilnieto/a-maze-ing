@@ -40,7 +40,9 @@ class Draw(Enum):
     BLOCK=" ■ "
 
 
-def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, terminal=False, stack=None) -> str:
+def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, 
+                terminal=False, 
+                stack=None, path=None) -> str:
     """
     Devuelve el string para imprimir el resultado.
     """
@@ -48,7 +50,7 @@ def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, termina
     display = []
     # Guarda en display la linea generada
     for y in range(maze.height):
-        display.append(_render_row(maze, y, show_path, color, stack))
+        display.append(_render_row(maze, y, show_path, color, stack, path))
 
     #Cierre de la pared de abajo
     line_final = ((paint(Draw.CROSS, color) +
@@ -62,7 +64,8 @@ def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, termina
 
 
 def _render_row(maze: MazeGenerator, y: int,
-                show_path: bool, color: Color, stack=None) -> str:
+                show_path: bool, color: Color, 
+                stack=None, path=None) -> str:
     """
     Renderiza toda una linea de la celda, se divide en dos:
      +---+---+ (Line Norte de 0,0)
@@ -82,7 +85,7 @@ def _render_row(maze: MazeGenerator, y: int,
             line_center += paint(Draw.WALL_V, color)
         else:
             line_center += paint(Draw.EMPTY_V, color)
-        line_center += _get_cell_content(maze, x, y, show_path, color, stack)
+        line_center += _get_cell_content(maze, x, y, show_path, color, stack, path)
 
     # Cierre del borde derecha
     line_north += paint(Draw.CROSS, color) # Añade el ultimo cross
@@ -93,7 +96,8 @@ def _render_row(maze: MazeGenerator, y: int,
 
 
 def _get_cell_content(maze: MazeGenerator, x: int, y: int,
-                      show_path: bool, color: Color, stack=None) -> str:
+                      show_path: bool, color: Color, 
+                      stack=None, path=None) -> str:
     """
     Al pasar la posicion en el grid de una celda devuelve el contenido de ella
     para imprimir
@@ -105,6 +109,14 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
             return paint(Draw.BLOCK, Color.YELLOW)
         elif (x, y) in stack:
             return paint(Draw.BLOCK, Color.PURPLE)
+    # Capa 0 (Solo cuando se resuelve el maze)
+    if path:
+        came_from, current_cell = path
+        if (x, y) == current_cell:
+            return paint(Draw.BLOCK, Color.YELLOW)
+        elif (x, y) in came_from:
+            return paint(Draw.BLOCK, Color.CYAN)
+
     # Capa -1 Entrada y salida
     if (x, y) == maze.entry:
         return paint(Draw.BLOCK, Color.GREEN)
@@ -120,7 +132,7 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     return paint(Draw.EMPTY_H, Color.RESET)
 
 
-def render_maze(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
+def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
     #Genera el laberinto con todas las paredes cerradas
     maze.reset_maze()
     #Comprueba si tiene que ser perfecto o no
@@ -151,6 +163,27 @@ def render_maze(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
     finally:
         toggle_terminal(True)
 
+def render_solve(maze: MazeGenerator, color=Color.BLACK) -> None:
+    generator = maze.calculate_path()
+    toggle_terminal(False)
+    disable_cursor()
+    try:
+        for anim_path in generator:
+            clean_terminal()
+            output = render_grid(maze, color=color, path=anim_path)
+            print(output)
+            time.sleep(maze.speed_animation)
+
+        final_path = maze.get_path()
+        for i in range(len(final_path) + 1):
+            clean_terminal()
+            maze.set_path(final_path[:i])
+            print(render_grid(maze, show_path=True, color=color))
+            time.sleep(0.05)
+        flush_input()
+    finally:
+        toggle_terminal(True)
+        enable_cursor()
 
 def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
     """Animates the solution path of the maze in the terminal.
