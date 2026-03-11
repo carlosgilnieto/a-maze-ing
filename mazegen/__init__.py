@@ -1,11 +1,11 @@
 from .generator import MazeGenerator
 from .output import generate_output
-from .visual import render_maze, animated_path, animated_generator, Color
+from .visual import render_grid, animated_path, render_maze, Color
 
 
 __all__ = ["MazeGenerator",
            "generate_output",
-           "render_maze",
+           "render_grid",
            "animated_path",
-           "animated_generator",
+           "render_maze",
            "Color"]

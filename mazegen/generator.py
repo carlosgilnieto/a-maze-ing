@@ -1,8 +1,7 @@
 from typing import List, Any, Dict, Generator
-from .errors import print_error, error, error_format
+from .errors import error, error_format
 from .parsing import get_config_from_file, check_42_pattern
 import random
-import sys
 
 
 class MazeError(Exception):
@@ -12,7 +11,8 @@ class MazeError(Exception):
 class MazeGenerator():
     def __init__(self, width: int, height: int,
                  entry: tuple, exit: tuple, seed=0,
-                 perfect=True, output_file="maze.txt"):
+                 perfect=True, output_file="maze.txt",
+                 speed_animation=0):
         # print(f"h:{width}, w:{height}, \nentry:{entry}, exit:{exit}, \nperfect:{perfect}, \nfile:{output_file}, seed:{seed}")
         value_error = error("MAZE ERROR")
         if width < 1:
@@ -29,6 +29,9 @@ class MazeGenerator():
                 (0 > exit[1] or exit[1] >= height)):
             value_error['add']("The value of EXIT must be between"
                                "(0,0) and (< WIDTH, < HEIGHT)")
+        if speed_animation < 0:
+            value_error['add']("The SPEED_ANIMATION must be 0 for disable "
+                               "or value > 0 for enable")
         if value_error['len']() > 0:
             value_error['print']()
             raise MazeError()
@@ -42,6 +45,7 @@ class MazeGenerator():
         self.output_file: str = output_file
         self.is_perfect: bool = perfect
         self.seed: int = seed
+        self.speed_animation: float = speed_animation
 
         #DFS
         self.grid: list = []
@@ -133,32 +137,10 @@ class MazeGenerator():
                 if (x, y) in pattern_coords:
                     self.visited[y][x] = True
 
-    def open_doors(self, pos: tuple):
-        """
-        Comprueba si una coordenada está en el borde del laberinto.
-        Si es así, rompe el muro exterior correspondiente para abrirlo al mundo.
-        """
-        x, y = pos
-
-        # Norte = 1 (0001)
-        # Este  = 2 (0010)
-        # Sur   = 4 (0100)
-        # Oeste = 8 (1000)
-
-        if (y == 0):
-            # Está en el borde superior: romper pared Norte: ~0001 => 1110.
-            self.grid[y][x] &= ~1
-        elif (y == self.height - 1):
-            # Está en el borde inferior: romper pared Sur: ~0100 => 1011.
-            self.grid[y][x] &= ~4
-        elif (x == 0):
-            # Está en el borde izquierdo: romper pared Oeste: ~1000 => 0111.
-            self.grid[y][x] &= ~8
-        elif (x == self.width - 1):
-            # Está en el borde derecho: romper pared Este: ~0010 => 1101.
-            self.grid[y][x] &= ~2
-
     def reset_maze(self) -> List[List[int]]:
+        """
+        Crea el laberinto con todas las paredes cerradas y añade el 42 patron
+        """
         # Esto hace que sea aleatorio cada vez que se genera uno nuevo
         if self.seed:
             random.seed(self.seed)
@@ -174,7 +156,22 @@ class MazeGenerator():
             raise MazeError(error_format(e, "Patter Error"))
         return self.grid
 
-    def perfect_maze(self, directions: List[tuple]) -> Generator:
+    def generate(self) -> None:
+        self.reset_maze()
+        if self.is_perfect:
+            generator = self.perfect_algo()
+        generator = self.non_perfect_algo()
+
+        #Al ser generadores hay que hacer que se haga toda la funcion
+        for __, _ in generator:
+            pass
+
+        return self.grid
+
+    def perfect_algo(self) -> Generator:
+        """
+        DFS algoritmo usado como generador para poder animarlo
+        """
         # 2. Celda de inicio (para empezar en 0,0) a construir el laberinto
         # Usar random?? para que sea aleatorio
         start_x, start_y = 0, 0
@@ -192,7 +189,7 @@ class MazeGenerator():
 
             # bucle que dará exactamente 4 vueltas, una por cada punto
             # cardinal de la lista DIRECTIONS
-            for dx, dy, wall, opp_wall in directions:
+            for dx, dy, wall, opp_wall in self.directions:
                 nx, ny = cx + dx, cy + dy  # next x, next y. Es la celda 'vecina'
                 # Calcula las coordenadas reales de ese vecino en la cuadrícula
 
@@ -223,9 +220,13 @@ class MazeGenerator():
                 yield self.grid, stack
         yield self.grid, stack
 
-    def non_perfect_maze(self, directions: List[tuple]) -> Generator:
+    def non_perfect_algo(self) -> Generator:
+        """
+        Primero usa el DFS para generar el laberinto y luego aleatoriamente escoge un 25% de las paredes
+        para quitarlas y crear posibles caminos
+        """
         #Ejecuta perfect_maze y vuelve el yield, cuando deja de haber yield continua la funcion
-        yield from self.perfect_maze(directions)
+        yield from self.perfect_algo()
 
         amount_walls: int = (self.width * self.height) // 25
         attempts = 0
@@ -234,7 +235,7 @@ class MazeGenerator():
             cx = random.randint(1, self.width - 2)
             cy = random.randint(1, self.height - 2)
 
-            direction = random.choice(directions)
+            direction = random.choice(self.directions)
             dx, dy, wall, opp_wall = direction
             nx, ny = cx + dx, cy + dy
 
@@ -260,7 +261,10 @@ class MazeGenerator():
 
         yield self.grid, []
 
-    def solve_maze(self) -> List[tuple[int, int]]:
+    def solve_algo(self) -> List[tuple[int, int]]:
+        """
+        Algortimo BFS
+        """
         #Lista de posiciones que quedan por comprobar
         queue_pos = [self.entry]
 
@@ -310,6 +314,30 @@ class MazeGenerator():
         cell = self.grid[y][x]
         return bin(cell).count('1')
 
+    def open_doors(self, pos: tuple):
+        """
+        Comprueba si una coordenada está en el borde del laberinto.
+        Si es así, rompe el muro exterior correspondiente para abrirlo al mundo.
+        """
+        x, y = pos
+
+        # Norte = 1 (0001)
+        # Este  = 2 (0010)
+        # Sur   = 4 (0100)
+        # Oeste = 8 (1000)
+
+        if (y == 0):
+            # Está en el borde superior: romper pared Norte: ~0001 => 1110.
+            self.grid[y][x] &= ~1
+        elif (y == self.height - 1):
+            # Está en el borde inferior: romper pared Sur: ~0100 => 1011.
+            self.grid[y][x] &= ~4
+        elif (x == 0):
+            # Está en el borde izquierdo: romper pared Oeste: ~1000 => 0111.
+            self.grid[y][x] &= ~8
+        elif (x == self.width - 1):
+            # Está en el borde derecho: romper pared Este: ~0010 => 1101.
+            self.grid[y][x] &= ~2
 
     def debug_print_state(self):
         """

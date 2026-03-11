@@ -40,7 +40,7 @@ class Draw(Enum):
     BLOCK=" ■ "
 
 
-def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK, stack=None) -> str:
+def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, terminal=False, stack=None) -> str:
     """
     Devuelve el string para imprimir el resultado.
     """
@@ -55,7 +55,10 @@ def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK, stack=N
                    paint(Draw.WALL_H, color)) * maze.width)
     line_final += paint(Draw.CROSS, color)
     display.append(line_final)
-    return "".join(display)
+    output = "".join(display)
+    if terminal:
+        print(output)
+    return output
 
 
 def _render_row(maze: MazeGenerator, y: int,
@@ -95,45 +98,58 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     Al pasar la posicion en el grid de una celda devuelve el contenido de ella
     para imprimir
     """
-    # 1º Entrada y salida
-    if (x, y) == maze.entry:
-        return paint(Draw.BLOCK, Color.GREEN)
-    if (x, y) == maze.exit:
-        return paint(Draw.BLOCK, Color.RED)
-
-    # 3-1º (Solo cuando se genera el laberinto)
+    # Capa 0 (Solo cuando se genera el laberinto)
     if stack:
         if (x, y) == stack[-1]:
             return paint(Draw.BLOCK, Color.YELLOW)
         elif (x, y) in stack:
             return paint(Draw.BLOCK, Color.PURPLE)
-    # 3-2º Paredes cerradas
+    # Capa -1 Entrada y salida
+    if (x, y) == maze.entry:
+        return paint(Draw.BLOCK, Color.GREEN)
+    if (x, y) == maze.exit:
+        return paint(Draw.BLOCK, Color.RED)
+    # Paredes cerradas
     if maze.grid[y][x] == 15:
         return paint(Draw.BLOCK, color)
-    
-    # 2º Path
-    if show_path and (x, y) in maze.path:
+    # Path
+    if show_path and maze.path and (x, y) in maze.path:
         return paint(Draw.BLOCK, Color.RESET)
-
-    # 4-2º Resto
+    # Resto
     return paint(Draw.EMPTY_H, Color.RESET)
 
 
-def animated_generator(maze: MazeGenerator, color=Color.BLACK) -> None:
-    # try:
+def render_maze(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
+    #Genera el laberinto con todas las paredes cerradas
     maze.reset_maze()
+    #Comprueba si tiene que ser perfecto o no
     if maze.is_perfect:
-        generator = maze.perfect_maze(maze.directions)
+        generator = maze.perfect_algo()
     else:
-        generator = maze.non_perfect_maze(maze.directions)
-    # except Exception:
-    #     print("error")
-    #     sys.exit()
-    for _, current_stack in generator:
-        output = render_maze(maze, stack=current_stack)
+        generator = maze.non_perfect_algo()
+    #Se bloquea la terminal
+    toggle_terminal(False)
+    disable_cursor()
+    try:
+        for _, current_stack in generator:
+            #Si tiene speed animation
+            if maze.speed_animation > 0:
+                output = render_grid(maze, color=wall_color,
+                                     stack=current_stack)
+                clean_terminal()
+                print(output)
+                time.sleep(maze.speed_animation)
+            #Si es 0 no se quiere animacion y se deja pasar todo el generador
+            else:
+                pass
         clean_terminal()
-        print(output)
-        time.sleep(.05)
+        print(render_grid(maze, color=wall_color,
+                          stack=current_stack))
+        flush_input()
+        enable_cursor()
+    finally:
+        toggle_terminal(True)
+
 
 def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
     """Animates the solution path of the maze in the terminal.
@@ -160,7 +176,7 @@ def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1)
         for i in range(len(path) + 1):
             step_path = path[:i]
             maze.path = step_path
-            print(render_maze(maze, True, color))
+            print(render_grid(maze, True, color))
             time.sleep(delay)
         flush_input()
     finally:

@@ -1,5 +1,5 @@
 import sys
-from mazegen import MazeGenerator, generate_output, animated_path, animated_generator, render_maze, Color
+from mazegen import MazeGenerator, generate_output, animated_path, render_maze, render_grid, Color
 
 def main():
 
@@ -9,25 +9,21 @@ def main():
         sys.exit()
     filename = sys.argv[1]
 
-    #Manual Method
+    # Manual Method
     try:
-        maze = MazeGenerator(10, 10, (1, 0), (8, 9))
+        maze = MazeGenerator(10, 10, (1, 0), (8, 9), perfect=False, speed_animation=0.05)
     except Exception:
         sys.exit()
 
-    #File Method
+    # File Method
     # try:
     #     maze = MazeGenerator.maze_from_file(filename)
     # except Exception:
     #     sys.exit()
-        
-    # maze = MazeGenerator(filename)
-    try:
-        # maze.generate_maze()
-        animated_generator(maze)
-    except Exception:
-        sys.exit()
-    # path = maze.solve_maze()
+
+    # Generar Maze
+    render_maze(maze) # Genera con una animacion el maze
+   
 
     # #Options
     # msg = ""
@@ -41,7 +37,9 @@ def main():
     #     if show_path and anim_path and aux_anim:
     #         animated_path(maze, path, pallet[color_idx])
     #     else:
-    #         print(render_maze(maze, show_path, pallet[color_idx]))
+    #         # print(render_grid(maze, show_path, pallet[color_idx]))
+    #         animated_generator(maze)
+    #         path = maze.solve_algo()
     #     generate_output(maze)
     #     print("=== A-Maze-ing ===")
     #     print("[1]. Re-generate a new maze\n"
@@ -59,8 +57,8 @@ def main():
     #         if option == "0":
     #             msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
     #         if option == "1": # Regenerar el maze
-    #             maze.generate_maze()
-    #             path = maze.solve_maze()
+    #             maze.generate()
+    #             path = maze.solve_algo()
     #             generate_output(maze)
     #             aux_anim = True
     #         elif option == "2": # Show/Hide path

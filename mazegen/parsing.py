@@ -14,7 +14,8 @@ CONFIG_SCHEMA = {
         'PERFECT': "bool"
     },
     'bonus': {
-        'SEED': "int"
+        'SEED': "int",
+        'SPEED_ANIMATION': "float"
     }}
 
 
@@ -23,7 +24,7 @@ def get_config_from_file(directory: str) -> Dict[str, Any]:
         with open(directory) as file:
             txt: str = file.read()
         config_parsed: Dict[str, Any] = parsing_config(txt)
-        if not check_required(config_parsed):
+        if not check_params(config_parsed):
             sys.exit()
         else:
             return config_parsed
@@ -44,18 +45,20 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         Funcion auxiliar para obtener los datos de cada valor
         '''
         if not value:
-            # errors['add'](f"{key} is empty")
             raise ValueError(f"{key}: Is empty")
         if data_type == "int":
             try:
                 return int(value)
             except ValueError:
-                # errors['add'](f"{key} is not a valid int")
                 raise ValueError(f"'{key}={value}' Is not a valid int")
+        if data_type == "float":
+            try:
+                return float(value)
+            except ValueError:
+                raise ValueError(f"'{key}={value}' Is not a valid float(x.xx)")
         elif data_type == "tuple":
             values = value.split(",")
             if len(values) > 2:
-                # errors['add'](f"{key} must Only 2 int (int, int)")
                 raise ValueError(f"'{key}={value}' must be 2 int (int, int)")
             return tuple((int(values[0]), int(values[1])))
         elif data_type == "bool":
@@ -64,8 +67,8 @@ def parsing_config(txt: str) -> Dict[str, Any]:
             elif value == "False":
                 return False
             else:
-                # errors['add'](f"{key}: Is not a bool")
-                raise ValueError(f"'{key}={value}' Is not a valid bool")
+                raise ValueError(f"'{key}={value}' Is not a valid bool "
+                                 "(True or False)")
         elif data_type == "file":
             extend = value.split(".")
             file_name: str = extend[0]
@@ -73,10 +76,8 @@ def parsing_config(txt: str) -> Dict[str, Any]:
                 or not file_name.strip()
                     or len(extend) < 2):
                 raise ValueError(f"'{key}={value}' Is not a valid .txt file")
-                # errors['add'](f"{key}: Is not a valid .txt file")
             return value
         else:
-            # errors['add'](f"{data_type} has not support")
             raise ValueError(f"{data_type} has not support")
 
         #Gestor de errores
@@ -134,7 +135,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         return config
 
 
-def check_required(config: Dict[str, Any]) -> bool:
+def check_params(config: Dict[str, Any]) -> bool:
     """
     Comprueba si todos los valores mandatory estan dentro del archivo
     """
@@ -147,13 +148,6 @@ def check_required(config: Dict[str, Any]) -> bool:
         missing = ", ".join(missing)
         raise ValueError(f"Key missing ({missing})")
     else:
-        #Comprueba que se pueda imprimir el patron 42
-        # if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
-        #     print("\033[33mWARNING: A maze will be generated WITHOUT ‘pattern 42’.\n"
-        #           "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
-        #     option = input("Continue? (y/n): ")
-        #     if option != "y":
-        #         sys.exit()
         if config.get('WIDTH') < 1:
             raise ValueError("Recomended minimun size: WIDTH=2")
         if config.get('HEIGHT') < 1:
@@ -170,6 +164,8 @@ def check_required(config: Dict[str, Any]) -> bool:
                 raise ValueError(f"{key}({pos[0]}, {pos[1]}) "
                                  "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
+        if config.get('SPEED_ANIMATION') < 0:
+            raise ValueError("SPEED_ANIMATION must be greater than 0")
         return True
 
 
