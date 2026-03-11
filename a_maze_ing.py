@@ -1,6 +1,5 @@
 import sys
-from mazegen import MazeGenerator, generate_output, animated_path, render_maze, Color, print_error
-
+from mazegen import MazeGenerator, generate_output, animated_path, animated_generator, render_maze, Color
 
 def main():
 
@@ -12,7 +11,7 @@ def main():
 
     #Manual Method
     try:
-        maze = MazeGenerator(5, 5, (0, 3), (2, 4))
+        maze = MazeGenerator(10, 10, (1, 0), (8, 9))
     except Exception:
         sys.exit()
 
@@ -23,7 +22,11 @@ def main():
     #     sys.exit()
         
     # maze = MazeGenerator(filename)
-    # maze.generate_maze()
+    try:
+        # maze.generate_maze()
+        animated_generator(maze)
+    except Exception:
+        sys.exit()
     # path = maze.solve_maze()
 
     # #Options

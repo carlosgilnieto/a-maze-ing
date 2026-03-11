@@ -40,85 +40,100 @@ class Draw(Enum):
     BLOCK=" ■ "
 
 
-def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK) -> str:
+def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK, stack=None) -> str:
     """
     Devuelve el string para imprimir el resultado.
-    Creo que si se quiere animar el recorrido, hay que cambiar el return a un print
     """
-    # +---+---+ (Line Norte de 0,0)
-    # | ■     | (Line Center de 0,0)
-    # +---+---+ (Line Norte de 1,0)
-
-    color = color.value #Por el momento quita el aviso del patron 42
+    # color = color.value #Por el momento quita el aviso del patron 42
     display = []
+    # Guarda en display la linea generada
     for y in range(maze.height):
-        display.append(_render_row(maze, y, show_path, color))
+        display.append(_render_row(maze, y, show_path, color, stack))
 
     #Cierre de la pared de abajo
-    line_final = (color +
-                  (Draw.CROSS.value + Draw.WALL_H.value) * maze.width)
-    line_final += Draw.CROSS.value + Color.RESET.value
+    line_final = ((paint(Draw.CROSS, color) +
+                   paint(Draw.WALL_H, color)) * maze.width)
+    line_final += paint(Draw.CROSS, color)
     display.append(line_final)
     return "".join(display)
 
 
+def _render_row(maze: MazeGenerator, y: int,
+                show_path: bool, color: Color, stack=None) -> str:
+    """
+    Renderiza toda una linea de la celda, se divide en dos:
+     +---+---+ (Line Norte de 0,0)
+     | ■     | (Line Center de 0,0)
+     +---+---+ (Line Norte de 1,0)
+    """
+    line_north = ""
+    line_center = ""
+
+    for x in range(maze.width):
+        line_north += paint(Draw.CROSS, color)  # Pinta las esquina
+        if maze.grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
+            line_north += paint(Draw.WALL_H, color)
+        else:
+            line_north += Draw.EMPTY_H.value
+        if maze.grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
+            line_center += paint(Draw.WALL_V, color)
+        else:
+            line_center += paint(Draw.EMPTY_V, color)
+        line_center += _get_cell_content(maze, x, y, show_path, color, stack)
+
+    # Cierre del borde derecha
+    line_north += paint(Draw.CROSS, color) # Añade el ultimo cross
+    if maze.grid[y][maze.width - 1] & 2:
+        line_center += paint(Draw.WALL_V, color)
+        # line_center += color + Draw.WALL_V.value + Color.RESET.value
+    return f"{line_north}\n{line_center}\n"
+
+
 def _get_cell_content(maze: MazeGenerator, x: int, y: int,
-                      show_path: bool, color: Color) -> str:
+                      show_path: bool, color: Color, stack=None) -> str:
     """
     Al pasar la posicion en el grid de una celda devuelve el contenido de ella
     para imprimir
     """
+    # 1º Entrada y salida
     if (x, y) == maze.entry:
-        return f"{Color.GREEN.value}{Draw.BLOCK.value}{Color.RESET.value}"
+        return paint(Draw.BLOCK, Color.GREEN)
     if (x, y) == maze.exit:
-        return f"{Color.RED.value}{Draw.BLOCK.value}{Color.RESET.value}"
-    if show_path and (x, y) in maze.path:
-        return f"{Color.RESET.value}{Draw.BLOCK.value}"
-    return Draw.EMPTY_H.value
+        return paint(Draw.BLOCK, Color.RED)
+
+    # 3-1º (Solo cuando se genera el laberinto)
+    if stack:
+        if (x, y) == stack[-1]:
+            return paint(Draw.BLOCK, Color.YELLOW)
+        elif (x, y) in stack:
+            return paint(Draw.BLOCK, Color.PURPLE)
+    # 3-2º Paredes cerradas
     if maze.grid[y][x] == 15:
-        return f"{color}{Draw.BLOCK.value}{Color.RESET.value}"
+        return paint(Draw.BLOCK, color)
+    
+    # 2º Path
+    if show_path and (x, y) in maze.path:
+        return paint(Draw.BLOCK, Color.RESET)
 
+    # 4-2º Resto
+    return paint(Draw.EMPTY_H, Color.RESET)
 
-def _render_row(maze: MazeGenerator, y: int,
-                show_path: bool, color: Color) -> str:
-    line_north = color
-    line_center = ""
-
-    for x in range(maze.width):
-        line_north += Draw.CROSS.value  # Pinta las esquina
-        if maze.grid[y][x] & 1: # Comprueba si esta abierto hacia el norte
-            line_north += Draw.WALL_H.value
-        else:
-            line_north += Draw.EMPTY_H.value
-        if maze.grid[y][x] & 8: # Comprueba si esta abieto hacia el oeste
-            line_center += (color +
-                            Draw.WALL_V.value +
-                            Color.RESET.value)
-        else:
-            line_center += Draw.EMPTY_V.value
-        line_center += _get_cell_content(maze, x, y, show_path, color)
-
-    # Cierre del borde derecha
-    line_north += Draw.CROSS.value # Añade el ultimo cross
-    if maze.grid[y][maze.width - 1] & 2:
-        line_center += color + Draw.WALL_V.value + Color.RESET.value
-    return f"{line_north}\n{line_center}\n"
 
 def animated_generator(maze: MazeGenerator, color=Color.BLACK) -> None:
-    try:
-        maze.reset_maze()
-        maze.debug_print_state()
-        if maze.is_perfect:
-            generator = maze.perfect_maze(maze.directions)
-        else:
-            generator = maze.non_perfect_maze(maze.directions)
-    except Exception:
-        print("error")
-        sys.exit()
-    for current in generator:
+    # try:
+    maze.reset_maze()
+    if maze.is_perfect:
+        generator = maze.perfect_maze(maze.directions)
+    else:
+        generator = maze.non_perfect_maze(maze.directions)
+    # except Exception:
+    #     print("error")
+    #     sys.exit()
+    for _, current_stack in generator:
+        output = render_maze(maze, stack=current_stack)
         clean_terminal()
-        print(render_maze(maze))
-        time.sleep(0.1)
+        print(output)
+        time.sleep(.05)
 
 def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
     """Animates the solution path of the maze in the terminal.
@@ -169,6 +184,13 @@ def toggle_terminal(enable: bool) -> None:
 def flush_input() -> None:
     # tcflush -> Vacia la espera de texto
     termios.tcflush(sys.stdin, termios.TCIFLUSH)
+
+
+def paint(form: Draw, color=Color.RESET) -> str:
+    """
+    Devuelve un str con el formato de str para 'pintar' la forma y color
+    """
+    return f"{color.value}{form.value}{Color.RESET.value}"
 
 
 def disable_cursor():

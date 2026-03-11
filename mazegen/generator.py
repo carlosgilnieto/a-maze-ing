@@ -182,6 +182,7 @@ class MazeGenerator():
         # "pila" (stack) nos servirá para retroceder (backtrack)
         stack = [(start_x, start_y)]
 
+        yield self.grid, stack
         # 3. Bucle principal del algoritmo
         while stack:
             # Miramos la celda actual (la que está en la cima de la pila)
@@ -214,16 +215,19 @@ class MazeGenerator():
 
                 self.visited[ny][nx] = True
                 stack.append((nx, ny))
-                yield self.grid
+                yield self.grid, stack
             else:
                 # Callejón sin salida: Si no hay vecinos no visitados, eliminamos esta celda de la pila
                 # y el algoritmo retrocede al anterior:
                 stack.pop()
-                yield self.grid
-        yield self.grid
-    
-    def non_perfect_maze(self, directions: List[tuple]) -> List[List[int]]:
-        amount_walls: int = (self.width * self.height) // 50
+                yield self.grid, stack
+        yield self.grid, stack
+
+    def non_perfect_maze(self, directions: List[tuple]) -> Generator:
+        #Ejecuta perfect_maze y vuelve el yield, cuando deja de haber yield continua la funcion
+        yield from self.perfect_maze(directions)
+
+        amount_walls: int = (self.width * self.height) // 25
         attempts = 0
         while amount_walls > 0 and attempts < 2000:
             attempts += 1
@@ -232,21 +236,31 @@ class MazeGenerator():
 
             direction = random.choice(directions)
             dx, dy, wall, opp_wall = direction
-            if (cx, cy) in self.protected:
+            nx, ny = cx + dx, cy + dy
+
+            # Check la celda estan dentro del laberinto?
+            if not (0 <= nx < self.width and 0 <= ny < self.height):
+                continue
+            # Check la celda y la vecian son protegidas? (42 patron)
+            if (cx, cy) in self.protected or (nx, ny) in self.protected:
+                continue
+            #Check la celda ya esta abierta?
+            if not (self.grid[cy][cx] & wall):
+                continue
+            #Check si la celda o la vecina ya tienen abiertas 2 paredes
+            if self.count_walls(cx, cy) <= 1 or self.count_walls(nx, ny) <= 1:
                 continue
 
-            if self.grid[cy][cx] & wall:
-                nx, ny = cx + dx, cy + dy
-        # 1. Verificar límites del laberinto
-                if (0 <= nx < self.width) and (0 <= ny < self.height):
-                    # 2. Verificar que ninguna esté protegida (Patrón 42)
-                    if (nx, ny) not in self.protected:
-                        self.grid[cy][cx] &= ~wall      # Quita pared en actual
-                        self.grid[ny][nx] &= ~opp_wall  # Quita pared en vecina
-                        amount_walls -= 1
-        return self.grid
+            self.grid[cy][cx] &= ~wall      # Quita pared en actual
+            self.grid[ny][nx] &= ~opp_wall  # Quita pared en vecina
+            amount_walls -= 1
 
-    def solve_maze(self) -> List[tuple[int,int]]:
+            # Se hace un ministack para poder animar
+            yield self.grid, [(cx, cy), (nx, ny)]
+
+        yield self.grid, []
+
+    def solve_maze(self) -> List[tuple[int, int]]:
         #Lista de posiciones que quedan por comprobar
         queue_pos = [self.entry]
 
@@ -290,7 +304,13 @@ class MazeGenerator():
             current = came_from[current]
         self.path = path[::-1]
         return self.path
-    
+
+    def count_walls(self, x: int, y: int) -> int:
+        """Cuenta cuantos 1 hay en la celda"""
+        cell = self.grid[y][x]
+        return bin(cell).count('1')
+
+
     def debug_print_state(self):
         """
         Imprime el estado actual de 'grid'
