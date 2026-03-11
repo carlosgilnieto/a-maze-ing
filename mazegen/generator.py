@@ -1,14 +1,39 @@
 from typing import List, Any, Tuple, Dict
-from .errors import print_error
-from .parsing import get_config_from_file
+from .errors import print_error, error
+from .parsing import get_config_from_file, check_42_pattern
 import random
 import sys
+
+
+class MazeError(Exception):
+    ...
 
 
 class MazeGenerator():
     def __init__(self, width: int, height: int,
                  entry: tuple, exit: tuple, seed=0,
                  perfect=True, output_file="maze.txt"):
+        # print(f"h:{width}, w:{height}, \nentry:{entry}, exit:{exit}, \nperfect:{perfect}, \nfile:{output_file}, seed:{seed}")
+        value_error = error("MAZE ERROR")
+        if width < 1:
+            value_error['add']("Recomended minimun size: WIDTH=2")
+        if height < 1:
+            value_error['add']("Recomended minimun size: HEIGHT=2")
+        if entry == exit:
+            value_error['add']("The value of ENTRY and EXIT must be different")
+        if ((0 > entry[0] or entry[0] >= width) or
+                (0 > entry[1] or entry[1] >= height)):
+            value_error['add']("The value of ENTRY must be between"
+                               "(0,0) and (< WIDTH, < HEIGHT)")
+        if ((0 > exit[0] or exit[0] >= width) or
+                (0 > exit[1] or exit[1] >= height)):
+            value_error['add']("The value of EXIT must be between"
+                               "(0,0) and (< WIDTH, < HEIGHT)")
+        if value_error['len']() > 0:
+            value_error['print']()
+            raise MazeError()
+
+        check_42_pattern(width, height)
 
         self.width: int = width
         self.height: int = height
@@ -54,13 +79,19 @@ class MazeGenerator():
         Genera un objeto maze apartid de un archivo
         """
         config: Dict[str, Any] = get_config_from_file(filename)
+        # if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
+        #     print("\033[33mWARNING: A maze will be generated "
+        #           "WITHOUT ‘pattern 42’.\n"
+        #           "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
+        #     option = input("Continue? (y/n): ")
+        #     if option != "y":
+        #         sys.exit()
         config = {k.lower(): v
                   for k, v in config.items()}
-        print(config)
         maze: MazeGenerator = cls(**config)
         return maze
-
-
+    
+    
     def get_center(self) -> Tuple:
         """
         Te devuelve la coordenada del centro del grid

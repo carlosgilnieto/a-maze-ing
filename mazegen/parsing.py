@@ -28,37 +28,9 @@ def get_config_from_file(directory: str) -> Dict[str, Any]:
         else:
             return config_parsed
     except FileNotFoundError:
-        print_error(f"'{directory}' does not exist in the directory")
-        sys.exit()
+        raise FileNotFoundError(f"'{directory}' does not exist in the directory")
     except ValueError as e:
-        print_error(e)
-        sys.exit
-
-
-#POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
-def get_config_file() -> str:
-    '''
-    Devuelve el nombre del 1º argumento, que deberia de ser el nombre del archivo de donde sacar
-    las variables de configuracion
-    '''
-    n = len(sys.argv)
-    if n != 2:
-        print_error("run: python3 a_maze_ing.py \"file_name\"")
-        sys.exit()
-    return sys.argv[1]
-
-
-def open_file(file: str) -> str:
-    """
-    Abre el archivo y devuelve lo abierto
-    """
-    try:
-        with open(file) as f:
-            config = f.read
-        return config
-    except FileNotFoundError:
-        print_error(f"'{file}' does not exist in the directory")
-        sys.exit()
+        raise ValueError(e)
 
 
 def parsing_config(txt: str) -> Dict[str, Any]:
@@ -106,7 +78,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         else:
             # errors['add'](f"{data_type} has not support")
             raise ValueError(f"{data_type} has not support")
-        
+
         #Gestor de errores
     pars_errors = error("Parsing File")
     val_errors = error("Value Error")
@@ -161,7 +133,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
     else:
         return config
 
-    
+
 def check_required(config: Dict[str, Any]) -> bool:
     """
     Comprueba si todos los valores mandatory estan dentro del archivo
@@ -176,12 +148,12 @@ def check_required(config: Dict[str, Any]) -> bool:
         raise ValueError(f"Key missing ({missing})")
     else:
         #Comprueba que se pueda imprimir el patron 42
-        if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
-            print("\033[33mWARNING: A maze will be generated WITHOUT ‘pattern 42’.\n"
-                  "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
-            option = input("Continue? (y/n): ")
-            if option != "y":
-                sys.exit()
+        # if config.get('WIDTH') < 9 or config.get('HEIGHT') < 8:
+        #     print("\033[33mWARNING: A maze will be generated WITHOUT ‘pattern 42’.\n"
+        #           "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
+        #     option = input("Continue? (y/n): ")
+        #     if option != "y":
+        #         sys.exit()
         if config.get('WIDTH') < 1:
             raise ValueError("Recomended minimun size: WIDTH=2")
         if config.get('HEIGHT') < 1:
@@ -199,3 +171,13 @@ def check_required(config: Dict[str, Any]) -> bool:
                                  "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
         return True
+
+
+def check_42_pattern(width: int, height: int) -> None:
+    if width < 9 or height < 8:
+        print("\033[33mWARNING: A maze will be generated "
+              "WITHOUT ‘pattern 42’.\n"
+              "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
+        option = input("Continue? (y/n): ")
+        if option != "y":
+            sys.exit()

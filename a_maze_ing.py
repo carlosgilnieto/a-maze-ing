@@ -1,16 +1,27 @@
 import sys
-from mazegen import MazeGenerator, generate_output, animated_path, render_maze, Color
+from mazegen import MazeGenerator, generate_output, animated_path, render_maze, Color, print_error
 
 
 def main():
-    
+
     n = len(sys.argv)
     if n != 2:
         print("\033[31mrun: python3 a_maze_ing.py \"file_name\"\033[0m")
         sys.exit()
     filename = sys.argv[1]
 
-    maze = MazeGenerator.maze_from_file(filename)
+    #Manual Method
+    try:
+        maze = MazeGenerator(5, 5, (0, 3), (2, 4))
+    except Exception:
+        sys.exit()
+
+    #File Method
+    # try:
+    #     maze = MazeGenerator.maze_from_file(filename)
+    # except Exception:
+    #     sys.exit()
+        
     # maze = MazeGenerator(filename)
     # maze.generate_maze()
     # path = maze.solve_maze()
