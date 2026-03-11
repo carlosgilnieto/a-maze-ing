@@ -1,37 +1,23 @@
 from typing import List, Any, Tuple, Dict
 from .errors import print_error
-from .parsing import parsing_config, check_config
+from .parsing import get_config_from_file
 import random
 import sys
 
-class MazeGenerator():
-    def __init__(self, config_file: str):
-        #Obtiene los valores del config file
-        if config_file:
-            try:
-                with open(config_file) as f:
-                    config = f.read()
-                pars_cfg: Dict[str, Any] = parsing_config(config,
-                                                          self.get_params())
-                if not check_config(pars_cfg, self.get_params()):
-                    sys.exit()
-                else:
-                    config = pars_cfg
-            except FileNotFoundError:
-                print_error(f"'{config_file}' does not exist in the directory")
-                sys.exit()
-            except ValueError as e:
-                print_error(e)
-                sys.exit()
 
-        self.width: int = config['WIDTH']
-        self.height: int = config['HEIGHT']
-        self.entry: tuple = config['ENTRY']
-        self.exit: tuple = config['EXIT']
-        self.output_file: str = config['OUTPUT_FILE']
-        self.is_perfect: bool = config['PERFECT']
-        self.seed: int = config.get('SEED')
-        
+class MazeGenerator():
+    def __init__(self, width: int, height: int,
+                 entry: tuple, exit: tuple, seed=0,
+                 perfect=True, output_file="maze.txt"):
+
+        self.width: int = width
+        self.height: int = height
+        self.entry: tuple = entry
+        self.exit: tuple = exit
+        self.output_file: str = output_file
+        self.is_perfect: bool = perfect
+        self.seed: int = seed
+
         #DFS
         self.grid: list = []
         self.visited: list = []
@@ -45,7 +31,7 @@ class MazeGenerator():
                 (0, 1, 4, 1),   # Sur
                 (-1, 0, 8, 2)   # Oeste
             ]
-        
+
         #Pattern
         self.protected = set() #Lista de coordenadas que no pueden ser modificadas
         self.impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
@@ -58,23 +44,22 @@ class MazeGenerator():
                               [(2, 0), (2, 1), (2, 2), (2, 5), (2, 6), (2, 7)],
                               [                (3, 2), (3, 5)                ],
                               [                (4, 2), (4, 5), (4, 6), (4, 7)]]
-        
+
         #BFS
         self.path: list = []
 
-    @staticmethod
-    def get_params() -> dict[dict[str]]:
-        mandatory_params = {'WIDTH': "int",
-                            'HEIGHT': "int",
-                            'ENTRY': "tuple",
-                            'EXIT': "tuple",
-                            'OUTPUT_FILE': "file",
-                            'PERFECT': "bool"}
+    @classmethod
+    def maze_from_file(cls, filename: str) -> "MazeGenerator":
+        """
+        Genera un objeto maze apartid de un archivo
+        """
+        config: Dict[str, Any] = get_config_from_file(filename)
+        config = {k.lower(): v
+                  for k, v in config.items()}
+        print(config)
+        maze: MazeGenerator = cls(**config)
+        return maze
 
-        bonus_params = {"SEED": "int"}
-
-        return {'mandatory': mandatory_params,
-                'bonus': bonus_params}
 
     def get_center(self) -> Tuple:
         """

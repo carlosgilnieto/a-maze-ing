@@ -2,6 +2,38 @@ import sys
 from typing import List, Dict, Any, Tuple
 from .errors import error, print_error
 
+#variable global con el diccionario de KEY=VALUE aceptados
+#Value en este caso es un str del tipo de valor que acepta
+CONFIG_SCHEMA = {
+    'mandatory': {
+        'WIDTH': "int",
+        'HEIGHT': "int",
+        'ENTRY': "tuple",
+        'EXIT': "tuple",
+        'OUTPUT_FILE': "file",
+        'PERFECT': "bool"
+    },
+    'bonus': {
+        'SEED': "int"
+    }}
+
+
+def get_config_from_file(directory: str) -> Dict[str, Any]:
+    try:
+        with open(directory) as file:
+            txt: str = file.read()
+        config_parsed: Dict[str, Any] = parsing_config(txt)
+        if not check_required(config_parsed):
+            sys.exit()
+        else:
+            return config_parsed
+    except FileNotFoundError:
+        print_error(f"'{directory}' does not exist in the directory")
+        sys.exit()
+    except ValueError as e:
+        print_error(e)
+        sys.exit
+
 
 #POSIBLE QUITARLO PORQUE SOLO DEBERIA DE ACEPTAR CONFIG.TXT?
 def get_config_file() -> str:
@@ -29,7 +61,7 @@ def open_file(file: str) -> str:
         sys.exit()
 
 
-def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
+def parsing_config(txt: str) -> Dict[str, Any]:
     """
     Mira que todos los valores del archivos, cumplan con lo que tienen que ser
     [NO COMPRUEBA SI ESTAN TODOS LOS VALORES NECESARIOS, SOLO EL TIPO DE VALOR]
@@ -79,10 +111,10 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
     pars_errors = error("Parsing File")
     val_errors = error("Value Error")
 
-    config: Dict[str: Any] = {}
+    config: Dict[str, Any] = {}
     #Junta los dos diccionarios para comprobar las KEYS validas
-    params: Dict[str: str] = (all_params.get('mandatory')
-                              | all_params.get('bonus'))
+    params: Dict[str, str] = (CONFIG_SCHEMA['mandatory'] |
+                              CONFIG_SCHEMA['bonus'])
     checked: List[str] = []
     txt = txt.split("\n")
 
@@ -115,11 +147,11 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
                     val_errors['add'](e)
                 checked.append(key)
     #Si hay una minima linea mal imprime todos los errores que ha habido
-    if (len(all_params['mandatory']) > len(checked)):
+    if (len(CONFIG_SCHEMA['mandatory']) > len(checked)):
         missing = [key
-                for key in all_params['mandatory']
-                if not key in checked
-                ]
+                   for key in CONFIG_SCHEMA['mandatory']
+                   if key not in checked
+                   ]
         missing = ", ".join(missing)
         pars_errors['add'](f"Missing keys: {missing}")
     if pars_errors['len']() > 0 or val_errors['len']() > 0:
@@ -130,11 +162,11 @@ def parsing_config(txt: str, all_params: Dict[str, Dict]) -> Dict[str, Any]:
         return config
 
     
-def check_config(config: Dict[str, Any], params: Dict) -> bool:
+def check_required(config: Dict[str, Any]) -> bool:
     """
-    Comprueba si todos los valores necesarios estan dentro del archivo
+    Comprueba si todos los valores mandatory estan dentro del archivo
     """
-    required: List[str] = params.get('mandatory').keys()
+    required: List[str] = CONFIG_SCHEMA.get('mandatory').keys()
     missing: List = []
     for key in required:
         if config.get(key, None) is None:
