@@ -1,5 +1,5 @@
 import sys
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Callable
 from .errors import error
 
 #variable global con el diccionario de KEY=VALUE aceptados
@@ -82,8 +82,8 @@ def parsing_config(txt: str) -> Dict[str, Any]:
             raise ValueError(f"{data_type} has not support")
 
     #Gestor de errores
-    pars_errors = error("Parsing File")
-    val_errors = error("Value Error")
+    pars_errors: Dict[str, Callable] = error("Parsing File")
+    val_errors: Dict[str, Callable] = error("Value Error")
 
     config: Dict[str, Any] = {}
     #Junta los dos diccionarios para comprobar las KEYS validas
@@ -142,7 +142,7 @@ def check_params(config: Dict[str, Any]) -> bool:
     """
     required: List[str] = CONFIG_SCHEMA.get('mandatory').keys()
     missing: List = []
-    error_config = error("CONFIG ERROR")
+    error_config: Dict[str, Callable] = error("CONFIG ERROR")
     for key in required:
         if config.get(key, None) is None:
             missing.append(key)

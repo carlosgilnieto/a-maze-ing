@@ -1,7 +1,10 @@
 import sys
-import mazegen
+try:
+    import mazegen
+except ImportError:
+    print("\033[31mFailed to import mazegen package run: make install\033[0m")
 
-def main():
+def main() -> None:
 
     n = len(sys.argv)
     if n != 2:

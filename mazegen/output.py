@@ -46,11 +46,11 @@ def generate_output(maze: MazeGenerator) -> None:
     maze_txt = hex_to_str(maze_hex)
     maze_path = dir_to_path(maze.get_path())
     #Cambiar por value de dic
-    output_data = {'ENTRY': maze.entry,
-                   'EXIT': maze.exit,
-                   'OUTPUT_FILE': maze.output_file,
-                   'PATH': maze_path}
-    with open(output_data['OUTPUT_FILE'], 'w') as output:
+    output_data: dict[str, str] = {'ENTRY': maze.entry,
+                                   'EXIT': maze.exit,
+                                   'OUTPUT_FILE': maze.output_file,
+                                   'PATH': maze_path}
+    with open(output_data['OUTPUT_FILE'], 'w', encoding="utf-8") as output:
         #Añade el laberinto al output.txt
         output.write(maze_txt)
         output.write("\n")

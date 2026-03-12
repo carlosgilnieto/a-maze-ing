@@ -1,48 +1,48 @@
-# [NOTAS]
-#	Importa el orden de los comandos, al hacer 'make' se ejecuta el primer 'comando'
+PYTHON3 = python3
+PIP = pip
+MAIN = a_maze_ing.py
+CONFIG_FILE = config.txt
 
-
-#La carpeta que se genera con el entorno virtual
-VENV 	= .venv
-#Los comandos hay que ejecutarlos desde el entorno virtual por eso el $(VENV), para que coja la cartea del entorno virtual
-PIP 	= $(VENV)/bin/pip
-PYTHON 	= $(VEpythonNV)/bin/python3
-
-FLAKE8 = flake8 --exclude=$(VENV)
+FLAKE8 = flake8 . 
+FLAKE8_EXCLUDED = .venv,.mypy_cache
 MYPY = mypy
+MYPY_EXCLUDED = "(.venv|.mypy_cache)"
 MYPY_FLAGS = --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 SRC     = a_maze_ing.py
 
-CACHE 	= __pycache__ \
-		  mazegen/__pycache__ \
+CACHE 	= mazegen/__pycache__ \
 		  .mypy_cache 
 
-$(VENV): #	Crea el entorno virtual
-	@echo "Creando entorno virtual..."
-	@python3 -m venv .venv
+run:
+	@$(PYTHON3) $(MAIN) $(CONFIG_FILE)
 
-# [Comandos]
-install: $(VENV)
-#	@echo "\nGenerando paquete mazegen..."
-#	Esto va a futuro
+install: 
 	@echo "\nInstalando paquetes..."
 	@$(PIP) install -r requirements.txt
 
-run:
-	@$(PYTHON) a_maze_ing.py config.txt
-
+build:
+	@echo "\033[33mGenerating Mazegen package\033[0m"
+	@$(PYTHON3) -m build -w >/dev/null 
+	@cp dist/*.whl .
+	@rm -r dist/ build/ *.egg-info
+	
 debug:
+	@$(PYTHON3) -m pdb $(MAIN) $(CONFIG_FILE)
 
 clean:
-	@rm -r $(CACHE)
+	@rm -rf $(CACHE)
 
 lint:
 	@echo "Testing Flake8..."
-	-@$(FLAKE8) .
+	-@$(FLAKE8) . --exclude=$(FLAKE8_EXCLUDED)
 	@echo "Testing mypy..."
-	-@$(MYPY) $(SRC) $(MYPY_FLAGS)
-
+	-@$(MYPY) . $(MYPY_FLAGS) --exclude $(MYPY_EXCLUDED)
 
 lint-strict:
-	
+	@echo "Testing Flake8..."
+	-@$(FLAKE8) . --exclude=$(FLAKE8_EXCLUDED)
+	@echo "Testing mypy..."
+	-@$(MYPY) . --strict --exclude $(MYPY_EXCLUDED)
+
+.PHONY: run install lint debug clean lint lint-strict
