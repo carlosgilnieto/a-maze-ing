@@ -19,6 +19,7 @@ def main():
     try:
         maze = MazeGenerator.maze_from_file(filename)
     except Exception:
+        # print(e)
         sys.exit()
 
     # render_generation(maze)

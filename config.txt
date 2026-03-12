@@ -1,9 +1,9 @@
 WIDTH=10
 HEIGHT=10
-ENTRY=1,2
-EXIT=8,9
+ENTRY=0,-2
+EXIT=9,10
 OUTPUT_FILE=maze.txt
 PERFECT=False
-#SEED=42 # Optional
-#ANIMATION=True # Optional
-#SPEED_ANIMATION=0.01 # Optional but need ANIMATION
+SEED=42 # Optional
+ANIMATION=True # Optional
+SPEED_ANIMATION=0.05 # Optional but need ANIMATION

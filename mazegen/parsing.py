@@ -142,31 +142,35 @@ def check_params(config: Dict[str, Any]) -> bool:
     """
     required: List[str] = CONFIG_SCHEMA.get('mandatory').keys()
     missing: List = []
+    error_config = error("CONFIG ERROR")
     for key in required:
         if config.get(key, None) is None:
             missing.append(key)
     if missing:
         missing = ", ".join(missing)
-        raise ValueError(f"Key missing ({missing})")
+        error_config['add'](f"Key missing ({missing})")
     else:
         if config.get('WIDTH') < 1:
-            raise ValueError("Recomended minimun size: WIDTH=2")
+            error_config['add']("Recomended minimun size: WIDTH=2")
         if config.get('HEIGHT') < 1:
-            raise ValueError("Recomended minimun size: HEIGHT=2")
+            error_config['add']("Recomended minimun size: HEIGHT=2")
         #Comprueba si ENTRY y EXIT son distintos
         if config.get('ENTRY', None) == config.get('EXIT', None):
-            raise ValueError("The value of ENTRY and EXIT must be different")
+            error_config['add']("The value of ENTRY and EXIT must be different")
         #Comprueba si ENTRY Y EXIT están dentro del laberinto
         for key in ['ENTRY', 'EXIT']:
             pos: Tuple = config.get(key, None) # Recoge el valor de la config
             #Comprueba que es los parametros de entry and exit esten dentro del tamaño del laberinto
             if ((pos[0] >= config.get('WIDTH', None) or pos[0] < 0) or
                     (pos[1] >= config.get('HEIGHT', None) or pos[1] < 0)):
-                raise ValueError(f"{key}({pos[0]}, {pos[1]}) "
+                error_config['add'](f"{key}({pos[0]}, {pos[1]}) "
                                  "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
         if config.get('SPEED_ANIMATION') and config['SPEED_ANIMATION'] < 0:
-            raise ValueError("SPEED_ANIMATION must be greater than 0")
+            error_config['add']("SPEED_ANIMATION must be greater than 0")
+        if error_config['len']() > 0:
+            error_config['print']()
+            return False
         return True
 
 
