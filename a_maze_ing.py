@@ -1,5 +1,5 @@
 import sys
-from mazegen import MazeGenerator, generate_output, render_solve, render_generation,render_path, render_maze, Color
+import mazegen
 
 def main():
 
@@ -9,25 +9,14 @@ def main():
         sys.exit()
     filename = sys.argv[1]
 
-    # # Manual Method
-    # try:
-    #     maze = MazeGenerator(10, 10, (1, 0), (8, 9) speed_animation=0.05)
-    # except Exception:
-    #     sys.exit()
-
-    # File Method
     try:
-        maze = MazeGenerator.maze_from_file(filename)
+        maze = mazegen.MazeGenerator.maze_from_file(filename)
     except Exception:
-        # print(e)
         sys.exit()
-
-    # render_generation(maze)
-    # render_solve(maze)
 
     #Options
     msg = ""
-    pallet = Color.get_pallete()
+    pallet = mazegen.Color.get_pallete()
     color_idx = 0
     show_path = False
     anim_path = maze.animation
@@ -36,15 +25,16 @@ def main():
     while True:
         if maze.animation:
             if generate:
-                render_generation(maze)
-                render_solve(maze)
+                mazegen.render_generation(maze)
+                mazegen.render_solve(maze)
         else:
             if generate:
                 maze.generate()
                 maze.calculate_path()
         if show_path:
-            render_path(maze, maze.animation and anim_path, pallet[color_idx])
-        render_maze(maze, terminal=True, show_path=show_path, color=pallet[color_idx])
+            mazegen.render_path(maze, maze.animation and anim_path, pallet[color_idx])
+        mazegen.render_maze(maze, terminal=True, show_path=show_path, color=pallet[color_idx])
+        mazegen.generate_output(maze)
         print("=== A-Maze-ing ===")
         print("[1]. Re-generate a new maze\n"
               f"[2]. {'Hide' if show_path else 'Show'} path from entry to exit\n"
