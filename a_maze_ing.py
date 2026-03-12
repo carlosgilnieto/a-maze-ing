@@ -1,5 +1,5 @@
 import sys
-from mazegen import MazeGenerator, generate_output, render_solve, render_generation, render_grid, Color
+from mazegen import MazeGenerator, generate_output, render_solve, render_generation,render_path, render_maze, Color
 
 def main():
 
@@ -21,61 +21,57 @@ def main():
     except Exception:
         sys.exit()
 
+    # render_generation(maze)
+    # render_solve(maze)
+
     #Options
     msg = ""
     pallet = Color.get_pallete()
     color_idx = 0
-    show_path = True
-    anim_path = False
-    aux_anim = True
+    show_path = False
+    anim_path = maze.animation
+    generate = True # Flag para bloquear la generacion cuando cambia de color
 
-    render_generation(maze)
-    render_solve(maze)
-    # while True:
-    #     # Generar Maze
-    #     render_generation(maze) # Genera con una animacion el maze
-    #     # maze.calculate_path()
-    #     render_solve(maze)
-        # if show_path and anim_path and aux_anim:
-        #     animated_path(maze, path, pallet[color_idx])
-        # else:
-        #     # print(render_grid(maze, show_path, pallet[color_idx]))
-        #     animated_generator(maze)
-        #     path = maze.solve_algo()
-        # generate_output(maze)
-        # print("=== A-Maze-ing ===")
-        # print("[1]. Re-generate a new maze\n"
-        #       f"[2]. {'Hide' if show_path else 'Show'} path from entry to exit\n"
-        #       f"[3]. {'OFF' if anim_path else 'ON'} path animation\n"
-        #       "[4]. Change maze colors\n"
-        #       "[5]. Quit\n")
-        # option = input("\033[?25h" + msg + "Choise? (1-5):")
-        # options = ["0", "1", "2", "3", "4", "5"]
-        # if not option == options[int(option)]:
-        #         msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
-        # else:
-        # #Queda meter que dependiendo de la opcion haga lo que corresponde
-        #     msg = ""
-        #     if option == "0":
-        #         msg = "\033[31mSelect a valid option (1-5).\033[0m\n" 
-        #     if option == "1": # Regenerar el maze
-        #         pass
-        #     elif option == "2": # Show/Hide path
-        #         show_path = not show_path
-        #         if not show_path:
-        #             anim_path = False
-        #     elif option == "3":
-        #         if show_path:
-        #             anim_path = not anim_path
-        #             aux_anim = True
-        #         else:
-        #             msg = "\033[31mFirst activate 'show path' with option 2.\033[0m\n"
-        #     elif option == "4": # Cambiar color
-        #         aux_anim = False
-        #         color_idx = (color_idx + 1) % len(pallet)
-        #     if option == "5":
-        #         sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
-        #         sys.exit()
+    while True:
+        if maze.animation:
+            if generate:
+                render_generation(maze)
+                render_solve(maze)
+        else:
+            if generate:
+                maze.generate()
+                maze.calculate_path()
+        if show_path:
+            render_path(maze, maze.animation and anim_path, pallet[color_idx])
+        render_maze(maze, terminal=True, show_path=show_path, color=pallet[color_idx])
+        print("=== A-Maze-ing ===")
+        print("[1]. Re-generate a new maze\n"
+              f"[2]. {'Hide' if show_path else 'Show'} path from entry to exit\n"
+              "[3]. Change maze colors\n"
+              "[4]. Quit\n")
+        option = input("\033[?25h" + msg + "Choise? (1-4):")
+        options = ["1", "2", "3", "4"]
+        try:
+            option = options[int(option) - 1] # Solo por validar que es una opcion correcta
+            msg = ""
+            generate = False
+            anim_path = False
+            if option == "1": # Regenerar el maze
+                generate = True
+                anim_path = True
+                pass
+            elif option == "2":
+                show_path = not show_path
+                anim_path = True
+            elif option == "3": # Cambiar color
+                color_idx = (color_idx + 1) % len(pallet)
+            elif option == "4":
+                sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
+                sys.exit()
+        except (IndexError, ValueError):
+            msg = "\033[31mSelect a valid option (1-5).\033[0m\n"
+            generate = False
+            anim_path = False
 
 
 if __name__ == "__main__":

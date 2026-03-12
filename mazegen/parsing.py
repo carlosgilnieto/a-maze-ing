@@ -1,6 +1,6 @@
 import sys
 from typing import List, Dict, Any, Tuple
-from .errors import error, print_error
+from .errors import error
 
 #variable global con el diccionario de KEY=VALUE aceptados
 #Value en este caso es un str del tipo de valor que acepta
@@ -15,6 +15,7 @@ CONFIG_SCHEMA = {
     },
     'bonus': {
         'SEED': "int",
+        'ANIMATION': "bool",
         'SPEED_ANIMATION': "float"
     }}
 
@@ -80,7 +81,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         else:
             raise ValueError(f"{data_type} has not support")
 
-        #Gestor de errores
+    #Gestor de errores
     pars_errors = error("Parsing File")
     val_errors = error("Value Error")
 
@@ -164,7 +165,7 @@ def check_params(config: Dict[str, Any]) -> bool:
                 raise ValueError(f"{key}({pos[0]}, {pos[1]}) "
                                  "must be between (0, 0) and "
                                  f"(<{config['WIDTH']}, <{config['HEIGHT']})")
-        if config.get('SPEED_ANIMATION') < 0:
+        if config.get('SPEED_ANIMATION') and config['SPEED_ANIMATION'] < 0:
             raise ValueError("SPEED_ANIMATION must be greater than 0")
         return True
 

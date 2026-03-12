@@ -10,9 +10,10 @@ class MazeError(Exception):
 
 class MazeGenerator():
     def __init__(self, width: int, height: int,
-                 entry: tuple, exit: tuple, seed=0,
+                 entry: tuple, exit: tuple,
+                 seed=0,
                  perfect=True, output_file="maze.txt",
-                 speed_animation=0):
+                 animation=False, speed_animation=0):
         value_error = error("MAZE ERROR")
         if width < 1:
             value_error['add']("Recomended minimun size: WIDTH=2")
@@ -28,13 +29,16 @@ class MazeGenerator():
                 (0 > exit[1] or exit[1] >= height)):
             value_error['add']("The value of EXIT must be between"
                                "(0,0) and (< WIDTH, < HEIGHT)")
-        if speed_animation < 0:
-            value_error['add']("The SPEED_ANIMATION must be 0 for disable "
-                               "or value > 0 for enable")
+        if animation:
+            if speed_animation < 0.01:
+                value_error['add']("Need SPEED_ANIMATION key or "
+                                   "SPEED_ANIMATION minimun value=0.01)")
+        else:
+            if speed_animation > 0:
+                value_error['add']("You need set ANIMATION=True or quit SPEED_ANIMATION")
         if value_error['len']() > 0:
             value_error['print']()
             raise MazeError()
-
         check_42_pattern(width, height)
 
         self.width: int = width
@@ -44,6 +48,7 @@ class MazeGenerator():
         self.output_file: str = output_file
         self.is_perfect: bool = perfect
         self.seed: int = seed
+        self.animation: bool = animation
         self.speed_animation: float = speed_animation
 
         #DFS
@@ -176,6 +181,14 @@ class MazeGenerator():
 
         return self.__grid
 
+    def calculate_path(self) -> None:
+        generator = self.solve_algo()
+
+        #Al ser generadores hay que hacer que se haga toda la funcion
+        for _, _ in generator:
+            pass
+        return self.__path
+
     def perfect_algo(self) -> Generator:
         """
         DFS algoritmo usado como generador para poder animarlo
@@ -271,7 +284,7 @@ class MazeGenerator():
 
         yield self.__grid, []
 
-    def calculate_path(self) -> Generator:
+    def solve_algo(self) -> Generator:
         """
         Algortimo BFS
         """

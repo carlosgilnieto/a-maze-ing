@@ -23,9 +23,11 @@ class Color(Enum):
 
     @staticmethod
     def get_pallete() -> list:
+        invalid_colors = [Color.RESET, Color.BLACK,
+                          Color.GREEN, Color.RED] 
         return [c
                 for c in Color
-                if not c == Color.RESET]
+                if c not in invalid_colors]
 
 
 class Draw(Enum):
@@ -40,7 +42,7 @@ class Draw(Enum):
     BLOCK=" ■ "
 
 
-def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK, 
+def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK, 
                 terminal=False, 
                 stack=None, path=None) -> str:
     """
@@ -49,6 +51,7 @@ def render_grid(maze: MazeGenerator, show_path=False, color=Color.BLACK,
     # color = color.value #Por el momento quita el aviso del patron 42
     display = []
     # Guarda en display la linea generada
+    clean_terminal()
     for y in range(maze.height):
         display.append(_render_row(maze, y, show_path, color, stack, path))
 
@@ -147,16 +150,15 @@ def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
         for _, current_stack in generator:
             #Si tiene speed animation
             if maze.speed_animation > 0:
-                output = render_grid(maze, color=wall_color,
+                output = render_maze(maze, color=wall_color,
                                      stack=current_stack)
-                clean_terminal()
+                
                 print(output)
                 time.sleep(maze.speed_animation)
             #Si es 0 no se quiere animacion y se deja pasar todo el generador
             else:
                 pass
-        clean_terminal()
-        print(render_grid(maze, color=wall_color,
+        print(render_maze(maze, color=wall_color,
                           stack=current_stack))
         flush_input()
         enable_cursor()
@@ -164,57 +166,65 @@ def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
         toggle_terminal(True)
 
 def render_solve(maze: MazeGenerator, color=Color.BLACK) -> None:
-    generator = maze.calculate_path()
+    generator = maze.solve_algo()
     toggle_terminal(False)
     disable_cursor()
     try:
         for anim_path in generator:
-            clean_terminal()
-            output = render_grid(maze, color=color, path=anim_path)
+            output = render_maze(maze, color=color, path=anim_path)
             print(output)
             time.sleep(maze.speed_animation)
-
-        final_path = maze.get_path()
-        for i in range(len(final_path) + 1):
-            clean_terminal()
-            maze.set_path(final_path[:i])
-            print(render_grid(maze, show_path=True, color=color))
-            time.sleep(0.05)
         flush_input()
     finally:
         toggle_terminal(True)
         enable_cursor()
 
-def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
-    """Animates the solution path of the maze in the terminal.
 
-    Iteratively updates the maze's path and renders it to create a visual 
-    animation. It temporarily disables terminal echo to prevent user input 
-    from interfering with the display.
-
-    Args:
-        maze (MazeGenerator): The maze object instance to be rendered.
-        path (list): A list of tuples [(x, y), ...] representing the coordinates 
-            of the solution path.
-        color (Color, optional): The color of the maze walls and path. 
-            Defaults to Color.WHITE.
-        delay (float, optional): Time in seconds to wait between each frame 
-            of the animation. Defaults to 0.1.
-
-    Raises:
-        Any exception raised during rendering will be caught to ensure the 
-        terminal settings are restored in the 'finally' block.
-    """
+def render_path(maze: MazeGenerator, animated_path=False, wall_color=Color.BLACK):
+    toggle_terminal(False)
+    disable_cursor()
+    final_path = maze.get_path()
     try:
-        toggle_terminal(False)
-        for i in range(len(path) + 1):
-            step_path = path[:i]
-            maze.__path = step_path
-            print(render_grid(maze, True, color))
-            time.sleep(delay)
-        flush_input()
+        if animated_path:
+            for i in range(len(final_path) + 1):
+                maze.set_path(final_path[:i])
+                print(render_maze(maze, show_path=True, color=wall_color))
+                time.sleep(maze.speed_animation)
     finally:
         toggle_terminal(True)
+        enable_cursor()
+        print(render_maze(maze, show_path=True, color=wall_color))
+
+# def animated_path(maze: MazeGenerator, path: list, color=Color.RESET, delay=0.1) -> None:
+#     """Animates the solution path of the maze in the terminal.
+
+#     Iteratively updates the maze's path and renders it to create a visual 
+#     animation. It temporarily disables terminal echo to prevent user input 
+#     from interfering with the display.
+
+#     Args:
+#         maze (MazeGenerator): The maze object instance to be rendered.
+#         path (list): A list of tuples [(x, y), ...] representing the coordinates 
+#             of the solution path.
+#         color (Color, optional): The color of the maze walls and path. 
+#             Defaults to Color.WHITE.
+#         delay (float, optional): Time in seconds to wait between each frame 
+#             of the animation. Defaults to 0.1.
+
+#     Raises:
+#         Any exception raised during rendering will be caught to ensure the 
+#         terminal settings are restored in the 'finally' block.
+#     """
+#     try:
+#         toggle_terminal(False)
+#         for i in range(len(path) + 1):
+#             step_path = path[:i]
+#             maze.__path = step_path
+#             print(render_maze(maze, True, color))
+#             time.sleep(delay)
+#         flush_input()
+#     finally:
+#         toggle_terminal(True)
 
 
 def toggle_terminal(enable: bool) -> None:
