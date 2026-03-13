@@ -3,7 +3,7 @@ PIP = pip
 MAIN = a_maze_ing.py
 CONFIG_FILE = config.txt
 
-FLAKE8 = flake8 . 
+FLAKE8 = $(PYTHON3) -m flake8 . 
 FLAKE8_EXCLUDED = .venv,.mypy_cache
 MYPY = mypy
 MYPY_EXCLUDED = "(.venv|.mypy_cache)"
@@ -11,27 +11,27 @@ MYPY_FLAGS = --warn-return-any --warn-unused-ignores --ignore-missing-imports --
 
 SRC     = a_maze_ing.py
 
-CACHE 	= mazegen/__pycache__ \
-		  .mypy_cache 
+CACHE 	= .mypy_cache \
+		  dist/ \
+		  build/ \
+		  *.egg-info
+
+all: install run
 
 run:
 	@$(PYTHON3) $(MAIN) $(CONFIG_FILE)
 
 install: 
-	@echo "\nInstalando paquetes..."
+	@echo "\033[33mInstalling the necessary packages...\033[0m"
 	@$(PIP) install -r requirements.txt
-
-build:
-	@echo "\033[33mGenerating Mazegen package\033[0m"
-	@$(PYTHON3) -m build -w >/dev/null 
-	@cp dist/*.whl .
-	@rm -r dist/ build/ *.egg-info
 	
 debug:
 	@$(PYTHON3) -m pdb $(MAIN) $(CONFIG_FILE)
 
 clean:
+	@echo "\033[33mDeleting cache files\033[0m"
 	@rm -rf $(CACHE)
+	@find . -type d -name "__pycache__" | xargs rm -rf
 
 lint:
 	@echo "Testing Flake8..."
@@ -45,4 +45,9 @@ lint-strict:
 	@echo "Testing mypy..."
 	-@$(MYPY) . --strict --exclude $(MYPY_EXCLUDED)
 
-.PHONY: run install lint debug clean lint lint-strict
+package:
+	@echo "\033[33mGenerating Mazegen package\033[0m"
+	@$(PYTHON3) -m build -w >/dev/null 
+	@cp dist/*.whl .
+
+.PHONY: run install debug clean lint lint-strict package
