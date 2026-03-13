@@ -14,7 +14,8 @@ def main() -> None:
 
     try:
         maze = mazegen.MazeGenerator.maze_from_file(filename)
-    except Exception:
+    except mazegen.MazeError as e:
+        print(f"\033[31m{e}\033[0m")
         sys.exit()
 
     #Options
@@ -63,7 +64,7 @@ def main() -> None:
                 sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
                 sys.exit()
         except (IndexError, ValueError):
-            msg = "\033[31mSelect a valid option (1-5).\033[0m\n"
+            msg = "\033[31mSelect a valid option (1-4).\033[0m\n"
             generate = False
             anim_path = False
 

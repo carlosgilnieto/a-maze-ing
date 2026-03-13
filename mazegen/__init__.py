@@ -1,4 +1,5 @@
 from .generator import MazeGenerator
+from .errors import MazeError
 from .output import generate_output
 from .visual import (render_maze,
                      render_solve, render_generation, render_path,
@@ -6,6 +7,7 @@ from .visual import (render_maze,
 
 
 __all__ = ["MazeGenerator",
+           "MazeError",
            "generate_output",
            "render_maze",
            "render_solve",

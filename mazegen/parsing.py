@@ -1,6 +1,6 @@
 import sys
 from typing import List, Dict, Any, Tuple, Callable
-from .errors import error
+from .errors import MazeError
 
 #variable global con el diccionario de KEY=VALUE aceptados
 #Value en este caso es un str del tipo de valor que acepta
@@ -22,7 +22,7 @@ CONFIG_SCHEMA = {
 
 def get_config_from_file(directory: str) -> Dict[str, Any]:
     try:
-        with open(directory) as file:
+        with open(directory, "r") as file:
             txt: str = file.read()
         config_parsed: Dict[str, Any] = parsing_config(txt)
         if not check_params(config_parsed):
@@ -30,8 +30,11 @@ def get_config_from_file(directory: str) -> Dict[str, Any]:
         else:
             return config_parsed
     except FileNotFoundError:
-        raise FileNotFoundError(f"'{directory}' does not exist in the directory")
-    except ValueError as e:
+        raise FileNotFoundError(f"'{directory}' does not exist "
+                                "in the root directory")
+    except PermissionError:
+        raise PermissionError(f"'{directory}' must have read permissions")
+    except MazeError as e:
         raise ValueError(e)
 
 
@@ -40,7 +43,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
     Mira que todos los valores del archivos, cumplan con lo que tienen que ser
     [NO COMPRUEBA SI ESTAN TODOS LOS VALORES NECESARIOS, SOLO EL TIPO DE VALOR]
     """
-
+    error_list = []
     def check_value(key: str, value: str, data_type: str) -> Any:
         '''
         Funcion auxiliar para obtener los datos de cada valor
@@ -82,8 +85,8 @@ def parsing_config(txt: str) -> Dict[str, Any]:
             raise ValueError(f"{data_type} has not support")
 
     #Gestor de errores
-    pars_errors: Dict[str, Callable] = error("Parsing File")
-    val_errors: Dict[str, Callable] = error("Value Error")
+    # pars_errors: Dict[str, Callable] = error("Parsing File")
+    # val_errors: Dict[str, Callable] = error("Value Error")
 
     config: Dict[str, Any] = {}
     #Junta los dos diccionarios para comprobar las KEYS validas
@@ -100,25 +103,25 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         #Separa por "=" para comprobar que cumple la linea "KEY=VALUE"
         line = line.split("=")
         if len(line) != 2 or not line:
-            pars_errors['add'](f"Line {num_line} format must be 'KEY'='VALUE'")
+            error_list.append(f"Line {num_line} format must be 'KEY'='VALUE'")
         else:
             key = line[0]
             value = line[1]
             #Comprueba si ya esta guardado el key, es decir ya tengo un valor con ese Key
             if config.get(key, None) or key in checked:
-                pars_errors['add'](f"Line {num_line} '{key}' is duplicated")
+                error_list.append(f"Line {num_line} '{key}' is duplicated")
                 checked.append(key)
             #Compara si el nombre del key que se ha encontrado en la linea cuadra con los que se puede tener
             elif not any(key == line[0]
                          for key in params.keys()):
-                pars_errors['add'](f"Line {num_line} '{key}' "
+                error_list.append(f"Line {num_line} '{key}' "
                                    "is not a valid KEY")
             #Si no tengo ese key significa que me lo quedo
             else:
                 try:
                     config[key] = check_value(key, value, params[key])
-                except Exception as e:
-                    val_errors['add'](e)
+                except ValueError as e:
+                    error_list.append(e)
                 checked.append(key)
     #Si hay una minima linea mal imprime todos los errores que ha habido
     if (len(CONFIG_SCHEMA['mandatory']) > len(checked)):
@@ -127,11 +130,9 @@ def parsing_config(txt: str) -> Dict[str, Any]:
                    if key not in checked
                    ]
         missing = ", ".join(missing)
-        pars_errors['add'](f"Missing keys: {missing}")
-    if pars_errors['len']() > 0 or val_errors['len']() > 0:
-        pars_errors['print']()
-        val_errors['print']()
-        sys.exit()
+        error_list.append(f"Missing keys: {missing}")
+    if len(error_list) > 0:
+        raise MazeError("PARSING ERROR", error_list)
     else:
         return config
 
@@ -140,45 +141,25 @@ def check_params(config: Dict[str, Any]) -> bool:
     """
     Comprueba si todos los valores mandatory estan dentro del archivo
     """
+    error_list = []
     required: List[str] = CONFIG_SCHEMA.get('mandatory').keys()
     missing: List = []
-    error_config: Dict[str, Callable] = error("CONFIG ERROR")
     for key in required:
         if config.get(key, None) is None:
             missing.append(key)
     if missing:
         missing = ", ".join(missing)
-        error_config['add'](f"Key missing ({missing})")
+        error_list.append(f"Key missing ({missing})")
     else:
-        if config.get('WIDTH') < 1:
-            error_config['add']("Recomended minimun size: WIDTH=2")
-        if config.get('HEIGHT') < 1:
-            error_config['add']("Recomended minimun size: HEIGHT=2")
-        #Comprueba si ENTRY y EXIT son distintos
-        if config.get('ENTRY', None) == config.get('EXIT', None):
-            error_config['add']("The value of ENTRY and EXIT must be different")
-        #Comprueba si ENTRY Y EXIT están dentro del laberinto
-        for key in ['ENTRY', 'EXIT']:
-            pos: Tuple = config.get(key, None) # Recoge el valor de la config
-            #Comprueba que es los parametros de entry and exit esten dentro del tamaño del laberinto
-            if ((pos[0] >= config.get('WIDTH', None) or pos[0] < 0) or
-                    (pos[1] >= config.get('HEIGHT', None) or pos[1] < 0)):
-                error_config['add'](f"{key}({pos[0]}, {pos[1]}) "
-                                 "must be between (0, 0) and "
-                                 f"(<{config['WIDTH']}, <{config['HEIGHT']})")
-        if config.get('SPEED_ANIMATION') and config['SPEED_ANIMATION'] < 0:
-            error_config['add']("SPEED_ANIMATION must be greater than 0")
-        if error_config['len']() > 0:
-            error_config['print']()
-            return False
         return True
+    raise MazeError("KEY ERROR", error_list)
 
 
 def check_42_pattern(width: int, height: int) -> None:
     if width < 9 or height < 7:
         print("\033[33mWARNING: A maze will be generated "
               "WITHOUT ‘pattern 42’.\n"
-              "Minimum size: WIDTH=8, HEIGHT=6\033[0m")
+              "Minimum size for print pattern: WIDTH=9, HEIGHT=7\033[0m")
         option = input("Continue? (y/n): ")
         if option != "y":
             sys.exit()

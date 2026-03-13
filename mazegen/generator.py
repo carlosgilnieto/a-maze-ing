@@ -1,11 +1,7 @@
 from typing import List, Any, Dict, Tuple, Generator
-from .errors import error, error_format
+from .errors import MazeError
 from .parsing import get_config_from_file, check_42_pattern
 import random
-
-
-class MazeError(Exception):
-    ...
 
 
 class MazeGenerator():
@@ -14,31 +10,11 @@ class MazeGenerator():
                  seed=0,
                  perfect=True, output_file="maze.txt",
                  animation=False, speed_animation=0):
-        value_error = error("MAZE ERROR")
-        if width < 1:
-            value_error['add']("Recomended minimun size: WIDTH=2")
-        if height < 1:
-            value_error['add']("Recomended minimun size: HEIGHT=2")
-        if entry == exit:
-            value_error['add']("The value of ENTRY and EXIT must be different")
-        if ((0 > entry[0] or entry[0] >= width) or
-                (0 > entry[1] or entry[1] >= height)):
-            value_error['add']("The value of ENTRY must be between"
-                               "(0,0) and (< WIDTH, < HEIGHT)")
-        if ((0 > exit[0] or exit[0] >= width) or
-                (0 > exit[1] or exit[1] >= height)):
-            value_error['add']("The value of EXIT must be between"
-                               "(0,0) and (< WIDTH, < HEIGHT)")
-        if animation:
-            if speed_animation < 0.01:
-                value_error['add']("Need SPEED_ANIMATION key or "
-                                   "SPEED_ANIMATION minimun value=0.01)")
-        else:
-            if speed_animation > 0:
-                value_error['add']("You need set ANIMATION=True or quit SPEED_ANIMATION")
-        if value_error['len']() > 0:
-            value_error['print']()
-            raise MazeError()
+        
+        self._check_values(width, height, entry, exit,
+                            seed, perfect, output_file,
+                            animation, speed_animation)
+
         check_42_pattern(width, height)
 
         self.width: int = width
@@ -80,13 +56,18 @@ class MazeGenerator():
 
         #BFS
         self.__path: list = []
+        self.reset_maze()
 
     @classmethod
     def maze_from_file(cls, filename: str) -> "MazeGenerator":
         """
         Genera un objeto maze apartid de un archivo
         """
-        config: Dict[str, Any] = get_config_from_file(filename)
+        #Duelve raise de FileNotFound, PermissionError y ValueError
+        try:
+            config: Dict[str, Any] = get_config_from_file(filename)
+        except (FileNotFoundError, PermissionError) as e:
+            raise MazeError("FILE ERROR", [e])
         config = {k.lower(): v
                   for k, v in config.items()}
         maze: MazeGenerator = cls(**config)
@@ -101,12 +82,42 @@ class MazeGenerator():
     def set_path(self, path: List[Tuple]):
         self.__path = path
 
+    def _check_values(self, width: int, height: int,
+                       entry: tuple, exit: tuple,
+                       seed=0,
+                       perfect=True, output_file="maze.txt",
+                       animation=False, speed_animation=0):
+        error_list: List = [] #Listado de errores
+        if width < 1:
+            error_list.append("Recomended minimun size: WIDTH=2")
+        if height < 1:
+            error_list.append("Recomended minimun size: HEIGHT=2")
+        if entry == exit:
+            error_list.append("The value of ENTRY and EXIT must be different")
+        if ((0 > entry[0] or entry[0] >= width) or
+                (0 > entry[1] or entry[1] >= height)):
+            error_list.append("The value of ENTRY must be between "
+                               "(0,0) and (< WIDTH, < HEIGHT)")
+        if ((0 > exit[0] or exit[0] >= width) or
+                (0 > exit[1] or exit[1] >= height)):
+            error_list.append("The value of EXIT must be between "
+                               "(0,0) and (< WIDTH, < HEIGHT)")
+        if animation:
+            if speed_animation < 0.01:
+                error_list.append("Need SPEED_ANIMATION key or "
+                                  "SPEED_ANIMATION minimun value=0.01)")
+        else:
+            if speed_animation > 0:
+                error_list.append("You need set ANIMATION=True or quit SPEED_ANIMATION key")
+        if len(error_list) > 0:
+            raise MazeError("MAZEGEN ERROR", error_list)
+
     def _set_pattern_42(self) -> None:
         """
         Dibuja grid inicial en la terminal y superpone el patrón '42' en el centro.
         Utiliza códigos ANSI para darle color.
         """
-        pattern_error = error("PATTERN ERROR")
+        error_list = []
         if self.width < 9 or self.height < 7:
            return # Salimos de la función patrón 42 y generamos laberinto normal.
 
@@ -129,20 +140,19 @@ class MazeGenerator():
                 real_x = px + offset_x
                 real_y = py + offset_y
                 if self.entry == (real_x, real_y):
-                    pattern_error['add'](f"ENTRY={self.entry} "
+                    error_list.append(f"ENTRY={self.entry} "
                                          "must be outside of the 42 patter, "
                                          "try other position")
                 if self.exit == (real_x, real_y):
-                    pattern_error['add'](f"EXIT={self.exit} "
+                    error_list.append(f"EXIT={self.exit} "
                                          "must be outside of the 42 patter, "
                                          "try other position")
                 pattern_coords.add((real_x, real_y))
                 self.__protected.add((real_x, real_y))
 
         #Printea errores
-        if pattern_error['len']() > 0:
-            pattern_error['print']()
-            raise MazeError()
+        if len(error_list) > 0:
+            raise MazeError("MAZEGEN", error_list)
 
         # 4. Añadido patrón como visitado.
         for y in range(self.height):
@@ -165,8 +175,9 @@ class MazeGenerator():
                           for _ in range(self.height)]
         try:
             self._set_pattern_42()
-        except ValueError as e:
-            raise MazeError(error_format(e, "Patter Error"))
+        except MazeError as e:
+            print(e.errors)
+            raise MazeError("MAZEGEN", e.errors)
         return self.__grid
 
     def generate(self) -> None:
