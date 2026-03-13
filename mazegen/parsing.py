@@ -48,6 +48,8 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         '''
         Funcion auxiliar para obtener los datos de cada valor
         '''
+        if " " in value:
+            raise ValueError(f"{key}: Value must not contain spaces")
         if not value:
             raise ValueError(f"{key}: Is empty")
         if data_type == "int":
@@ -62,9 +64,11 @@ def parsing_config(txt: str) -> Dict[str, Any]:
                 raise ValueError(f"'{key}={value}' Is not a valid float(x.xx)")
         elif data_type == "tuple":
             values = value.split(",")
-            if len(values) > 2:
+            try:
+                position = tuple((int(values[0]), int(values[1])))
+            except (IndexError, ValueError):
                 raise ValueError(f"'{key}={value}' must be 2 int (int, int)")
-            return tuple((int(values[0]), int(values[1])))
+            return position
         elif data_type == "bool":
             if value == "True":
                 return True
@@ -83,10 +87,6 @@ def parsing_config(txt: str) -> Dict[str, Any]:
             return value
         else:
             raise ValueError(f"{data_type} has not support")
-
-    #Gestor de errores
-    # pars_errors: Dict[str, Callable] = error("Parsing File")
-    # val_errors: Dict[str, Callable] = error("Value Error")
 
     config: Dict[str, Any] = {}
     #Junta los dos diccionarios para comprobar las KEYS validas
@@ -132,7 +132,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         missing = ", ".join(missing)
         error_list.append(f"Missing keys: {missing}")
     if len(error_list) > 0:
-        raise MazeError("PARSING ERROR", error_list)
+        raise MazeError("", error_list)
     else:
         return config
 

@@ -1,10 +1,10 @@
 class MazeError(Exception):
-    def __init__(self, prefix="ERROR", errors=None):
+    def __init__(self, prefix=None, errors=None):
         self.prefix = prefix
         self.errors = errors if errors is not None else []
         super().__init__(self.prefix)
     
-    def __str__(self) :
+    def __str__(self):
         if not self.errors:
             return self.prefix
         formated_msg = [f"{self.prefix}: {msg}."

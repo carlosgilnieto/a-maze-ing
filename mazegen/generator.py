@@ -10,10 +10,10 @@ class MazeGenerator():
                  seed=0,
                  perfect=True, output_file="maze.txt",
                  animation=False, speed_animation=0):
-        
+
         self._check_values(width, height, entry, exit,
-                            seed, perfect, output_file,
-                            animation, speed_animation)
+                           seed, perfect, output_file,
+                           animation, speed_animation)
 
         check_42_pattern(width, height)
 
@@ -68,6 +68,8 @@ class MazeGenerator():
             config: Dict[str, Any] = get_config_from_file(filename)
         except (FileNotFoundError, PermissionError) as e:
             raise MazeError("FILE ERROR", [e])
+        except ValueError as e:
+            raise MazeError("CONFIG ERROR", [e])
         config = {k.lower(): v
                   for k, v in config.items()}
         maze: MazeGenerator = cls(**config)
@@ -83,10 +85,10 @@ class MazeGenerator():
         self.__path = path
 
     def _check_values(self, width: int, height: int,
-                       entry: tuple, exit: tuple,
-                       seed=0,
-                       perfect=True, output_file="maze.txt",
-                       animation=False, speed_animation=0):
+                      entry: tuple, exit: tuple,
+                      seed=0,
+                      perfect=True, output_file="maze.txt",
+                      animation=False, speed_animation=0):
         error_list: List = [] #Listado de errores
         if width < 1:
             error_list.append("Recomended minimun size: WIDTH=2")
@@ -97,11 +99,11 @@ class MazeGenerator():
         if ((0 > entry[0] or entry[0] >= width) or
                 (0 > entry[1] or entry[1] >= height)):
             error_list.append("The value of ENTRY must be between "
-                               "(0,0) and (< WIDTH, < HEIGHT)")
+                              "(0,0) and (< WIDTH, < HEIGHT)")
         if ((0 > exit[0] or exit[0] >= width) or
                 (0 > exit[1] or exit[1] >= height)):
             error_list.append("The value of EXIT must be between "
-                               "(0,0) and (< WIDTH, < HEIGHT)")
+                              "(0,0) and (< WIDTH, < HEIGHT)")
         if animation:
             if speed_animation < 0.01:
                 error_list.append("Need SPEED_ANIMATION key or "
