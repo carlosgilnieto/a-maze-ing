@@ -137,7 +137,10 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
 
 def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
     #Genera el laberinto con todas las paredes cerradas
-    maze.reset_maze()
+    try:
+        maze.reset_maze()
+    except Exception:
+        sys.exit()
     #Comprueba si tiene que ser perfecto o no
     if maze.is_perfect:
         generator = maze.perfect_algo()

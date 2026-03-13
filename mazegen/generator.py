@@ -107,7 +107,7 @@ class MazeGenerator():
         Utiliza códigos ANSI para darle color.
         """
         pattern_error = error("PATTERN ERROR")
-        if self.width < 9 or self.height < 8:
+        if self.width < 9 or self.height < 7:
            return # Salimos de la función patrón 42 y generamos laberinto normal.
 
         if self.width % 2 == 0:
@@ -119,7 +119,7 @@ class MazeGenerator():
         center_y = self.height // 2
         # Desplazamos el punto de inicio hacia arriba y a la izquierda.
         # (El patrón tiene unas 5 (0-4) filas de alto y 7-8 (0-6) columnas de ancho)
-        offset_x = center_x - 4
+        offset_x = center_x - (3 if self.width % 2 else 4)
         offset_y = center_y - 2
         # 3. Extraer todas las coordenadas del patrón y adaptarlas al tamaño real del grid
         # Usamos un 'set' (conjunto) porque buscar en un set es más rápido que en una lista
@@ -251,7 +251,7 @@ class MazeGenerator():
         #Ejecuta perfect_maze y vuelve el yield, cuando deja de haber yield continua la funcion
         yield from self.perfect_algo()
 
-        amount_walls: int = (self.width * self.height) // 25
+        amount_walls: int = (self.width * self.height) // 75
         attempts = 0
         while amount_walls > 0 and attempts < 2000:
             attempts += 1

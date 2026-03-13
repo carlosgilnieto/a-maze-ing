@@ -175,10 +175,10 @@ def check_params(config: Dict[str, Any]) -> bool:
 
 
 def check_42_pattern(width: int, height: int) -> None:
-    if width < 9 or height < 8:
+    if width < 9 or height < 7:
         print("\033[33mWARNING: A maze will be generated "
               "WITHOUT ‘pattern 42’.\n"
-              "Minimum size: WIDTH=8, HEIGHT=7\033[0m")
+              "Minimum size: WIDTH=8, HEIGHT=6\033[0m")
         option = input("Continue? (y/n): ")
         if option != "y":
             sys.exit()
