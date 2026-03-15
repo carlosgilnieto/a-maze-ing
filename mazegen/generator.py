@@ -35,9 +35,11 @@ class MazeGenerator():
 
     def __init__(self, width: int, height: int,
                  entry: tuple, exit: tuple,
-                 seed=0,
-                 perfect=True, output_file="output_maze.txt",
-                 animation=False, speed_animation=0) -> None:
+                 seed: int = 0,
+                 perfect: bool = True,
+                 output_file: str = "output_maze.txt",
+                 animation: bool = False,
+                 speed_animation: float = 0) -> None:
         """
         Initialises the maze generator and prepares the grid.
 
@@ -168,9 +170,11 @@ class MazeGenerator():
 
     def _check_values(self, width: int, height: int,
                       entry: tuple, exit: tuple,
-                      seed=0,
-                      perfect=True, output_file="output_maze.txt",
-                      animation=False, speed_animation=0):
+                      seed: int = 0,
+                      perfect: bool = True,
+                      output_file: str = "output_maze.txt",
+                      animation: bool = False,
+                      speed_animation: float = 0) -> None:
         """
         Validates the logical constraints of the maze parameters.
 

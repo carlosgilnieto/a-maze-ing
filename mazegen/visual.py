@@ -9,6 +9,7 @@ terminal modes to enable a live interactive menu.
 import time
 import sys
 import termios
+from typing import Optional
 from enum import Enum
 from .generator import MazeGenerator
 
@@ -88,9 +89,11 @@ class Draw(Enum):
     BLOCK = " ■ "
 
 
-def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK,
-                terminal=False,
-                stack=None, path=None) -> str:
+def render_maze(maze: MazeGenerator, show_path: bool = False,
+                color: Color = Color.BLACK,
+                terminal: bool = False,
+                stack: Optional[list] = None,
+                path: Optional[tuple] = None) -> str:
     """
     Generates the complete string of the rendered maze, including characters
     and colours.
@@ -126,9 +129,12 @@ def render_maze(maze: MazeGenerator, show_path=False, color=Color.BLACK,
     return output
 
 
-def _render_row(maze: MazeGenerator, y: int,
-                show_path: bool, color: Color,
-                stack=None, path=None) -> str:
+def _render_row(maze: MazeGenerator,
+                y: int,
+                show_path: bool,
+                color: Color,
+                stack: Optional[list] = None,
+                path: Optional[tuple] = None) -> str:
     """
     Renders a specific row of the grid by evaluating the bitmaps.
 
@@ -168,8 +174,10 @@ def _render_row(maze: MazeGenerator, y: int,
 
 
 def _get_cell_content(maze: MazeGenerator, x: int, y: int,
-                      show_path: bool, color: Color,
-                      stack=None, path=None) -> str:
+                      show_path: bool,
+                      color: Color,
+                      stack: Optional[list] = None,
+                      path: Optional[tuple] = None) -> str:
     """
     When the cursor hovers over a cell in the grid, it returns the
     cell's contents for printing, which can be a wall, an empty space,
@@ -220,7 +228,8 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     return paint(Draw.EMPTY_H, Color.RESET)
 
 
-def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
+def render_generation(maze: MazeGenerator,
+                      wall_color: Color = Color.BLACK) -> None:
     """
     Monitor the visual generation process (DFS) frame by frame.
     The function manages terminal modes to create a smooth animation effect,
@@ -267,7 +276,8 @@ def render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None:
         toggle_terminal(True)
 
 
-def render_solve(maze: MazeGenerator, color=Color.BLACK) -> None:
+def render_solve(maze: MazeGenerator,
+                 color: Color = Color.BLACK) -> None:
     """
     Monitor the visual search process (solving the maze) frame by frame.
 
@@ -294,8 +304,9 @@ def render_solve(maze: MazeGenerator, color=Color.BLACK) -> None:
         enable_cursor()
 
 
-def render_path(maze: MazeGenerator, animated_path=False,
-                wall_color=Color.BLACK):
+def render_path(maze: MazeGenerator,
+                animated_path: bool = False,
+                wall_color: Color = Color.BLACK) -> None:
     """
     Plots the final path from the start to the finish.
         If `animated_path` is False, the entire path is drawn at once. If True,
@@ -361,7 +372,8 @@ def flush_input() -> None:
     termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
 
-def paint(form: Draw, color=Color.RESET) -> str:
+def paint(form: Draw,
+          color: Color = Color.RESET) -> str:
     """
     Returns a string in the format used to “draw” the shape and colour.
     """
