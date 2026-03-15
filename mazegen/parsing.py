@@ -228,9 +228,9 @@ def check_params(config: Dict[str, Any]) -> bool:
         MazeError: If one or more required keys are missing, list them
             in the error message.
     """
-    error_list = []
+    error_list: List[str] = []
     required: List[str] = list(CONFIG_SCHEMA['mandatory'].keys())
-    missing: List = []
+    missing: List[str] = []
     for key in required:
         if config.get(key, None) is None:
             missing.append(key)

@@ -33,8 +33,10 @@ class MazeGenerator():
         speed_animation: Animation speed in seconds.
     """
 
-    def __init__(self, width: int, height: int,
-                 entry: tuple, exit: tuple,
+    def __init__(self, width: int,
+                 height: int,
+                 entry: Tuple[int, int],
+                 exit: Tuple[int, int],
                  seed: int = 0,
                  perfect: bool = True,
                  output_file: str = "output_maze.txt",
@@ -104,7 +106,7 @@ class MazeGenerator():
                               [(4, 2), (4, 5), (4, 6), (4, 7)]]
 
         # BFS (Breadth-First Search) for solving.
-        self.__path: list = []
+        self.__path: list[Tuple[int, int]] = []
         self.reset_maze()
 
     @classmethod
@@ -168,8 +170,10 @@ class MazeGenerator():
         """
         self.__path = path
 
-    def _check_values(self, width: int, height: int,
-                      entry: tuple, exit: tuple,
+    def _check_values(self, width: int,
+                      height: int,
+                      entry: Tuple[int, int],
+                      exit: Tuple[int, int],
                       seed: int = 0,
                       perfect: bool = True,
                       output_file: str = "output_maze.txt",
@@ -509,7 +513,7 @@ class MazeGenerator():
             if (x, y) not in self.__protected:
                 return (x, y)
 
-    def open_doors(self, pos: tuple) -> None:
+    def open_doors(self, pos: tuple[int, int]) -> None:
         """
         Open the outer wall of a cell if it is on the edge of the maze.
 

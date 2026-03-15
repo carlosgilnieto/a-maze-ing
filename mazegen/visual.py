@@ -9,9 +9,13 @@ terminal modes to enable a live interactive menu.
 import time
 import sys
 import termios
-from typing import Optional
+from typing import List, Optional, Tuple, Dict
 from enum import Enum
 from .generator import MazeGenerator
+
+# Alias for path type (came_from, current_cell)
+PathType = Tuple[Dict[Tuple[int, int], Optional[Tuple[int, int]]],
+                 Tuple[int, int]]
 
 
 class Color(Enum):
@@ -47,7 +51,7 @@ class Color(Enum):
     RESET = "\033[0m"
 
     @staticmethod
-    def get_pallete() -> list:
+    def get_pallete() -> List["Color"]:
         """
         Generates a list of valid colours to use as the main colour
         of the maze.
@@ -92,8 +96,8 @@ class Draw(Enum):
 def render_maze(maze: MazeGenerator, show_path: bool = False,
                 color: Color = Color.BLACK,
                 terminal: bool = False,
-                stack: Optional[list] = None,
-                path: Optional[tuple] = None) -> str:
+                stack: Optional[List[Tuple[int, int]]] = None,
+                path: Optional[PathType] = None) -> str:
     """
     Generates the complete string of the rendered maze, including characters
     and colours.
@@ -106,7 +110,7 @@ def render_maze(maze: MazeGenerator, show_path: bool = False,
         color (Color): ANSI colour applied to the maze walls.
         terminal (bool): If True, prints the result directly.
         stack (Optional[list]): Current stack of nodes (used in DFS animation).
-        path (Optional[tuple]): Current state of the path (used in
+        path (Optional[PathType]): Current state of the path (used in
             BFS animation).
 
     Returns:
@@ -133,8 +137,8 @@ def _render_row(maze: MazeGenerator,
                 y: int,
                 show_path: bool,
                 color: Color,
-                stack: Optional[list] = None,
-                path: Optional[tuple] = None) -> str:
+                stack: Optional[List[Tuple[int, int]]] = None,
+                path: Optional[PathType] = None) -> str:
     """
     Renders a specific row of the grid by evaluating the bitmaps.
 
@@ -176,8 +180,8 @@ def _render_row(maze: MazeGenerator,
 def _get_cell_content(maze: MazeGenerator, x: int, y: int,
                       show_path: bool,
                       color: Color,
-                      stack: Optional[list] = None,
-                      path: Optional[tuple] = None) -> str:
+                      stack: Optional[List[Tuple[int, int]]] = None,
+                      path: Optional[PathType] = None) -> str:
     """
     When the cursor hovers over a cell in the grid, it returns the
     cell's contents for printing, which can be a wall, an empty space,
@@ -196,7 +200,7 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
             ANSI colour applied to the maze walls.
         stack (Optional[list]):
             Current stack of nodes (used in DFS animation).
-        path (Optional[tuple]):
+        path (Optional[PathType]):
             Current state of the path (used in BFS animation).
 
     Returns:
