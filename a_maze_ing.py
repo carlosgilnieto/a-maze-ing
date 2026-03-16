@@ -13,6 +13,7 @@ try:
     import mazegen
 except ImportError:
     print("\033[31mFailed to import mazegen package run: make install\033[0m")
+    sys.exit()
 
 
 def main() -> None:
