@@ -220,7 +220,7 @@ class MazeGenerator():
             error_list.append("SPEED_ANIMATION max value=1)")
 
         if len(error_list) > 0:
-            raise MazeError("MAZEGEN ERROR", error_list)
+            raise MazeError("VALUE ERROR", error_list)
 
     def _set_pattern_42(self) -> None:
         """
@@ -301,8 +301,7 @@ class MazeGenerator():
         try:
             self._set_pattern_42()
         except MazeError as e:
-            print(e.errors)
-            raise MazeError("MAZEGEN", e.errors)
+            raise MazeError("MAZEGEN ERROR", e.errors)
         return self.__grid
 
     def generate(self) -> List[List[int]]:
