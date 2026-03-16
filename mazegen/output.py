@@ -93,8 +93,6 @@ def generate_output(maze: MazeGenerator) -> None:
     maze_txt = hex_to_str(maze_hex)
     maze_path = dir_to_path(maze.get_path())
 
-    # Solucionado el tipado de mypy: Dict[str, Any] permite mezclar
-    # strings y tuplas.
     output_data: Dict[str, Any] = {
         'ENTRY': maze.entry,
         'EXIT': maze.exit,
@@ -103,10 +101,8 @@ def generate_output(maze: MazeGenerator) -> None:
     }
 
     with open(output_data['OUTPUT_FILE'], 'w', encoding="utf-8") as output:
-        # Añade el laberinto al output.txt
         output.write(maze_txt)
         output.write("\n")
-        # Añade el entry y exit al output.txt
         output.write(f"{output_data['ENTRY'][0]},{output_data['ENTRY'][1]}\n")
         output.write(f"{output_data['EXIT'][0]},{output_data['EXIT'][1]}\n")
         output.write(f"{output_data['PATH']}\n")

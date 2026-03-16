@@ -1,4 +1,4 @@
-
+<!-- markdownlint-disable-next-line MD041 -->
 *This project has been created as part of the 42 curriculum by cagil, irivas-v.*
 
 # A-Maze-ing: Procedural Maze Generation and Solving
@@ -12,8 +12,8 @@ interactive ASCII visualization.
 
 ### Goals
 
-- Generate perfect and imperfect mazes using procedural algorithms.
-- Solve mazes using shortest-path pathfinding algorithms.
+- Generate perfect and imperfect mazes using procedural algorithm.
+- Solve mazes using shortest-path pathfinding algorithm.
 - Enforce structural constraints (borders, connectivity, mandatory 42 pattern).
 - Provide an interactive, ANSI-colored ASCII visualization.
 
@@ -52,6 +52,16 @@ make lint
 make lint --strict
 ```
 
+### End
+
+```bash
+# Clean files at program exit.
+make clean
+
+# Exit virtual environment
+deactivate
+```
+
 ### Configuration File Format
 
 The maze is configured via a `KEY=VALUE` text file. Comments starting with `#` are ignored.
@@ -77,15 +87,14 @@ SPEED_ANIMATION=0.01        # Delay in seconds between frames (e.g., 0.01)
 **Example Configuration:**
 
 ```
-WIDTH=020
+WIDTH=20
 HEIGHT=15
 ENTRY=0,1
 EXIT=19,14
 OUTPUT_FILE=output_maze.txt
 PERFECT=True
 SEED=42 # Optional
-ANIMATION=True # Optional but need SPEED_ANIMATION
-SPEED_ANIMATION=0.01 # Optional but need ANIMATION
+SPEED_ANIMATION=0.01 # Optional
 ```
 
 ### Interactive Commands
@@ -97,13 +106,13 @@ Once the maze is displayed, the following commands are available:
 | `1` | Regenerate maze (creates a new maze with current config/seed)
 | `2` | Toggle solution path display |
 | `3` | Change colors (Cycles circularly through the available ANSI color palettes)
-| `4` | Toggle solver animation (BFS pathfinding with step-by-step visualization) |
+| `4` | Exit program|
 
 ## Algorithms & Constraint Enforcement
 
 ### Chosen Algorithm: DFS (Depth-First Search) with Backtracking
 
-DFS was chosen as the primary generation algorithm because:
+DFS was chosen as the generation algorithm because:
 
 1. **Simplicity & Memory Efficiency**:Runs smoothly using an iterative stack approach.
 2. **Perfect Maze Generation**: Guarantees a perfect maze (no loops, all cells connected).
@@ -144,7 +153,7 @@ pip install ./mazegen-1.0.0.tar.gz
 **Instantiate and use the generator (basic example):**
 
 ```python
-from mazegen import MazeGenerator
+import mazegen
 
 # Initialize the generator directly
 gen = MazeGenerator(width=20, height=15, entry=(0,0), exit=(19,14), perfect=True)
@@ -162,8 +171,7 @@ maze = MazeGenerator.maze_from_file("config.txt")
 - width, height: maze dimensions (int)
 - seed: int or None (None => random)
 - perfect: bool (True => perfect maze; False => may create loops)
-- Animation: bool
-- Speed Animation: float (used when Animation=True)
+- Speed Animation: float (used when float > 0. If speed animation = 0, no animation)
 
 **Access the generated structure and a solution:**
 
@@ -201,6 +209,7 @@ path = gen.solve(maze, entry=(0,0), exit=(19,19))
 ```
 
 **Reusable Components:**
+funiciones de render solve y render_generation, y render_path
 <!-- - Algorithm switching: `gen.set_algorithm("prim")` → regenerate with different algorithm
 - Step-by-step generation: `gen.iter_generation_steps(entry, exit)` → yields intermediate mazes for animation
 - Step-by-step solving: `gen.solve_bfs_steps()` → yields solver frontier for visualization

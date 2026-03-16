@@ -9,7 +9,7 @@ destrucción aleatoria para laberintos imperfectos, y búsqueda en amplitud
 
 from typing import List, Any, Dict, Optional, Set, Tuple, Generator
 from .errors import MazeError
-from .parsing import get_config_from_file, check_42_pattern
+from .parsing import (get_config_from_file, check_42_pattern)
 import random
 
 
@@ -40,7 +40,6 @@ class MazeGenerator():
                  seed: int = 0,
                  perfect: bool = True,
                  output_file: str = "output_maze.txt",
-                 animation: bool = False,
                  speed_animation: float = 0) -> None:
         """
         Initialises the maze generator and prepares the grid.
@@ -64,7 +63,7 @@ class MazeGenerator():
         """
         self._check_values(width, height, entry, exit,
                            seed, perfect, output_file,
-                           animation, speed_animation)
+                           speed_animation)
 
         check_42_pattern(width, height)
 
@@ -75,7 +74,7 @@ class MazeGenerator():
         self.output_file: str = output_file
         self.is_perfect: bool = perfect
         self.seed: int = seed
-        self.animation: bool = animation
+        self.animation: bool = False if speed_animation == 0 else True
         self.speed_animation: float = speed_animation
 
         # DFS (Depth-First Search) for generation.
@@ -177,7 +176,6 @@ class MazeGenerator():
                       seed: int = 0,
                       perfect: bool = True,
                       output_file: str = "output_maze.txt",
-                      animation: bool = False,
                       speed_animation: float = 0) -> None:
         """
         Validates the logical constraints of the maze parameters.
@@ -194,7 +192,6 @@ class MazeGenerator():
             seed: Seed for reproducibility. Default 0.
             perfect: If True, generates a perfect maze. Default True.
             output_file: Name of the output file. Default “maze.txt”.
-            animation: Enables animation mode. Default: False.
             speed_animation: Animation speed in seconds. Default: 0.
 
         Raises:
@@ -216,14 +213,12 @@ class MazeGenerator():
                 (0 > exit[1] or exit[1] >= height)):
             error_list.append("The value of EXIT must be between "
                               "(0,0) and (< WIDTH, < HEIGHT)")
-        if animation:
-            if speed_animation < 0.01:
-                error_list.append("Need SPEED_ANIMATION key or "
-                                  "SPEED_ANIMATION minimun value=0.01)")
-        else:
-            if speed_animation > 0:
-                error_list.append("You need set ANIMATION=True or "
-                                  "quit SPEED_ANIMATION key")
+
+        if speed_animation < 0.01 and speed_animation != 0:
+            error_list.append("SPEED_ANIMATION minimun value=0.01)")
+        elif speed_animation > 1:
+            error_list.append("SPEED_ANIMATION max value=1)")
+
         if len(error_list) > 0:
             raise MazeError("MAZEGEN ERROR", error_list)
 

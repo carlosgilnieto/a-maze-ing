@@ -48,10 +48,3 @@ class MazeError(Exception):
         formated_msg = [f"{self.prefix}: {msg}."
                         for msg in self.errors]
         return "\n".join(formated_msg)
-
-
-def print_error(msg: str, error_type: str = "Error") -> None:
-    """
-    Imprimir errores que se vean
-    """
-    print(f"\033[31m{error_type}: {msg}.\033[0m")

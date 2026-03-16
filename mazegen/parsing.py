@@ -23,7 +23,6 @@ CONFIG_SCHEMA = {
     },
     'bonus': {
         'SEED': "int",
-        'ANIMATION': "bool",
         'SPEED_ANIMATION': "float"
     }}
 
@@ -266,5 +265,5 @@ def check_42_pattern(width: int, height: int) -> None:
               "WITHOUT ‘pattern 42’.\n"
               "Minimum size for print pattern: WIDTH=9, HEIGHT=7\033[0m")
         option = input("Continue? (y/n): ")
-        if option != "y":
+        if option not in ["yes", "y"]:
             sys.exit()

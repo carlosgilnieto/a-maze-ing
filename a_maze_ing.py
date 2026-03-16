@@ -47,7 +47,6 @@ def main() -> None:
     show_path = False
     anim_path = maze.animation
     generate = True
-
     while True:
         if maze.animation:
             if generate:
@@ -98,7 +97,6 @@ def main() -> None:
             elif option == "4":
                 sys.stdout.write("\033[2J\033[3J\033[H\033[?25h")
                 sys.exit()
-
         except (IndexError, ValueError):
             msg = "\033[31mSelect a valid option (1-4).\033[0m\n"
             generate = False

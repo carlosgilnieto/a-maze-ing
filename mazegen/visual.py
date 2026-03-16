@@ -41,7 +41,7 @@ class Color(Enum):
         CYAN: Cyan colour (ANSI code 36).
         RESET: Reset colour (ANSI code 0).
     """
-    BLACK = "\033[30m"
+    BLACK = "\033[90m"
     RED = "\033[31m"
     GREEN = "\033[32m"
     YELLOW = "\033[33m"
@@ -264,7 +264,7 @@ def render_generation(maze: MazeGenerator,
     try:
         current_stack = None
         for _, current_stack in generator:
-            if maze.speed_animation > 0:
+            if maze.animation:
                 output = render_maze(maze, color=wall_color,
                                      stack=current_stack)
                 print(output)
