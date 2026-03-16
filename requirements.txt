@@ -1,5 +1,4 @@
 build==1.4.0
-mazegen-1.0.0-py3-none-any.whl
 flake8==7.3.0
 librt==0.8.1
 mypy==1.19.1

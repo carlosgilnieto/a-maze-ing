@@ -24,6 +24,7 @@ run:
 install: 
 	@echo "\033[33mInstalling the necessary packages...\033[0m"
 	@$(PIP) install -r requirements.txt
+	-@$(PIP) install mazegen-*.whl
 	
 	
 debug:
