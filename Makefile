@@ -25,6 +25,7 @@ install:
 	@echo "\033[33mInstalling the necessary packages...\033[0m"
 	@$(PIP) install -r requirements.txt
 	
+	
 debug:
 	@$(PYTHON3) -m pdb $(MAIN) $(CONFIG_FILE)
 
