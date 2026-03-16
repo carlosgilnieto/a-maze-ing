@@ -1,10 +1,10 @@
 """
-Módulo del motor de generación y resolución de laberintos.
+Maze Generation and Solving Engine Module.
 
-Contiene la clase principal `MazeGenerator`, que implementa los algoritmos
-de búsqueda en profundidad (DFS) para generar laberintos perfectos,
-destrucción aleatoria para laberintos imperfectos, y búsqueda en amplitud
-(BFS) para encontrar la ruta óptima de salida.
+It contains the main class `MazeGenerator`, which implements
+depth-first search (DFS) algorithms to generate perfect mazes,
+random destruction for imperfect mazes, and breadth-first search
+(BFS) to find the optimal exit path.
 """
 
 from typing import List, Any, Dict, Optional, Set, Tuple, Generator
@@ -55,8 +55,8 @@ class MazeGenerator():
             seed: Seed for reproducibility. Default 0 (random).
             perfect: If True, generates a perfect maze. Default True.
             output_file: Name of the output file. Default “maze.txt”.
-            animation: Enables animation mode. Default False.
-            speed_animation: Animation speed in seconds. Default 0.
+            speed_animation: Animation speed in seconds.
+                Default: speed_animation = 0 (No animation).
 
         Raises:
             MazeError: If any parameter does not meet the logical constraints.
@@ -430,7 +430,6 @@ class MazeGenerator():
             self.__grid[ny][nx] &= ~opp_wall
             amount_walls -= 1
 
-            # Se hace un ministack para poder animar
             yield self.__grid, [(cx, cy), (nx, ny)]
 
         yield self.__grid, []
@@ -536,7 +535,7 @@ class MazeGenerator():
 
     def debug_print_state(self) -> None:
         """
-        Imprime el estado actual de 'grid'
+        For debugging purposes, print the current state of the grid
         """
         for y in range(self.height):
             row_grid = ""

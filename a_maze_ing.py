@@ -75,7 +75,6 @@ def main() -> None:
         options = ["1", "2", "3", "4"]
 
         try:
-            # Captura en caso de que el usuario ingrese 0.
             index = int(option) - 1
             if index < 0:
                 raise ValueError

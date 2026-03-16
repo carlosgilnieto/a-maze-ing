@@ -32,7 +32,7 @@ class Color(Enum):
     (e.g., green for entry, red for exit).
 
     Attributes:
-        BLACK: Black (ANSI code 30).
+        BLACK: Black (ANSI code 30 or 90).
         RED: Red (ANSI code 31).
         GREEN: Green (ANSI code 32).
         YELLOW: Yellow colour (ANSI code 33).
