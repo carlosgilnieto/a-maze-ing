@@ -23,6 +23,7 @@ CONFIG_SCHEMA = {
     },
     'bonus': {
         'SEED': "int",
+        'PATTERN': "int",
         'SPEED_ANIMATION': "float"
     }}
 
@@ -202,7 +203,6 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         error_list.append(f"Missing keys: {missing_str}")
     if len(error_list) > 0:
         raise ValueError(error_list)
-        raise MazeError("", error_list)
     else:
         return config
 
@@ -263,7 +263,7 @@ def check_42_pattern(width: int, height: int) -> None:
     """
     if width < 9 or height < 7:
         print("\033[33mWARNING: A maze will be generated "
-              "WITHOUT ‘pattern 42’.\n"
+              "WITHOUT ‘pattern’.\n"
               "Minimum size for print pattern: WIDTH=9, HEIGHT=7\033[0m")
         option = input("Continue? (y/n): ")
         if option not in ["yes", "y"]:

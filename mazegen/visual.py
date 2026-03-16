@@ -226,10 +226,13 @@ def _get_cell_content(maze: MazeGenerator, x: int, y: int,
     if (x, y) == maze.exit:
         return paint(Draw.BLOCK, Color.RED)
     if grid[y][x] == 15:
-        return paint(Draw.BLOCK, (color))
+        if grid[y][x] and (not maze.visited[y][x]):
+            return paint(Draw.EMPTY_H)
+        else:
+            return paint(Draw.BLOCK, (color))
     if show_path and maze.get_path() and (x, y) in maze.get_path():
         return paint(Draw.BLOCK, Color.RESET)
-    return paint(Draw.EMPTY_H, Color.RESET)
+    return paint(Draw.EMPTY_H)
 
 
 def render_generation(maze: MazeGenerator,

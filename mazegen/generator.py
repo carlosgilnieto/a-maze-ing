@@ -11,6 +11,71 @@ from typing import List, Any, Dict, Optional, Set, Tuple, Generator
 from .errors import MazeError
 from .parsing import (get_config_from_file, check_42_pattern)
 import random
+from enum import Enum
+
+
+class Digit(Enum):
+    ZERO = [[(0, 0), (0, 1), (0, 2)],
+            [(1, 0),         (1, 2)],
+            [(2, 0),         (2, 2)],
+            [(3, 0),         (3, 2)],
+            [(4, 0), (4, 1), (4, 2)]]
+    ONE = [[(0, 2)],
+           [(1, 2)],
+           [(2, 2)],
+           [(3, 2)],
+           [(4, 2)]]
+    TWO = [[(0, 0), (0, 1), (0, 2)],
+           [(1, 2)],
+           [(2, 0), (2, 1), (2, 2)],
+           [(3, 0),],
+           [(4, 0), (4, 1), (4, 2)]]
+    THREE = [[(0, 0), (0, 1), (0, 2)],
+             [(1, 2)],
+             [(2, 0), (2, 1), (2, 2)],
+             [(3, 2)],
+             [(4, 0), (4, 1), (4, 2)]]
+    FOUR = [[(0, 0), (0, 2)],
+            [(1, 0), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(3, 2)],
+            [(4, 2)]]
+    FIVE = [[(0, 0), (0, 1), (0, 2)],
+            [(1, 0),],
+            [(2, 0), (2, 1), (2, 2)],
+            [(3, 2)],
+            [(4, 0), (4, 1), (4, 2)]]
+    SIX = [[(0, 0), (0, 1), (0, 2)],
+           [(1, 0)],
+           [(2, 0), (2, 1), (2, 2)],
+           [(3, 0), (3, 2)],
+           [(4, 0), (4, 1), (4, 2)]]
+    SEVEN = [[(0, 0), (0, 1), (0, 2)],
+             [(1, 2)],
+             [(2, 2)],
+             [(3, 2)],
+             [(4, 2)]]
+    EIGHT = [[(0, 0), (0, 1), (0, 2)],
+             [(1, 0), (1, 2)],
+             [(2, 0), (2, 1), (2, 2)],
+             [(3, 0), (3, 2)],
+             [(4, 0), (4, 1), (4, 2)]]
+    NINE = [[(0, 0), (0, 1), (0, 2)],
+            [(1, 0), (1, 2)],
+            [(2, 0), (2, 1), (2, 2)],
+            [(3, 2)],
+            [(4, 2)]]
+
+    def create_pattern(d1: 'Digit', d2: 'Digit',
+                       space: int) -> List[List[Tuple[int, int]]]:
+        pattern: List[List[Tuple[int, int]]] = []
+        for row in d1.value:
+            pattern.append(list(row))
+        for i in range(len(d2.value)):
+            digit = [(y, x + space)
+                     for y, x in d2.value[i]]
+            pattern[i].extend(digit)
+        return pattern
 
 
 class MazeGenerator():
@@ -39,6 +104,7 @@ class MazeGenerator():
                  exit: Tuple[int, int],
                  seed: int = 0,
                  perfect: bool = True,
+                 pattern: int = 42,
                  output_file: str = "output_maze.txt",
                  speed_animation: float = 0) -> None:
         """
@@ -63,6 +129,7 @@ class MazeGenerator():
         """
         self._check_values(width, height, entry, exit,
                            seed, perfect, output_file,
+                           pattern,
                            speed_animation)
 
         check_42_pattern(width, height)
@@ -79,7 +146,7 @@ class MazeGenerator():
 
         # DFS (Depth-First Search) for generation.
         self.__grid: List[List[int]] = []
-        self.__visited: List[List[bool]] = []
+        self.visited: List[List[bool]] = []
 
         self.__directions = [
                 (0, -1, 1, 4),  # North (1) / opposite South (4)
@@ -89,13 +156,9 @@ class MazeGenerator():
             ]
 
         # Pattern 42
-        self.__protected: Set[Tuple[int, int]] = set()
-        self.__impar_pattern: List[List[Tuple[int, int]]] = [
-                            [(0, 0), (0, 2), (0, 4), (0, 5), (0, 6)],
-                            [(1, 0), (1, 2), (1, 6)],
-                            [(2, 0), (2, 1), (2, 2), (2, 4), (2, 5), (2, 6)],
-                            [(3, 2), (3, 4)],
-                            [(4, 2), (4, 4), (4, 5), (4, 6)]]
+        self.protected: Set[Tuple[int, int]] = set()
+        self.pattern: int = pattern
+        self.__impar_pattern: List[List[Tuple[int, int]]] = []
 
         self.__par_pattern: List[List[Tuple[int, int]]] = [
                               [(0, 0), (0, 2), (0, 5), (0, 6), (0, 7)],
@@ -176,6 +239,7 @@ class MazeGenerator():
                       seed: int = 0,
                       perfect: bool = True,
                       output_file: str = "output_maze.txt",
+                      pattern: int = 42,
                       speed_animation: float = 0) -> None:
         """
         Validates the logical constraints of the maze parameters.
@@ -213,7 +277,10 @@ class MazeGenerator():
                 (0 > exit[1] or exit[1] >= height)):
             error_list.append("The value of EXIT must be between "
                               "(0,0) and (< WIDTH, < HEIGHT)")
-
+        if pattern < 0:
+            error_list.append("PATTERN minimun value=0")
+        elif pattern > 99:
+            error_list.append("PATTERN max value=99")
         if speed_animation < 0.01 and speed_animation != 0:
             error_list.append("SPEED_ANIMATION minimun value=0.01)")
         elif speed_animation > 1:
@@ -222,7 +289,7 @@ class MazeGenerator():
         if len(error_list) > 0:
             raise MazeError("MAZEGEN ERROR", error_list)
 
-    def _set_pattern_42(self) -> None:
+    def _set_pattern(self) -> None:
         """
         Overlays the “42” pattern centred on the grid and marks its cells as
         protected.
@@ -235,14 +302,20 @@ class MazeGenerator():
             MazeError: If the entry or exit coincides with any cell
                 in the “42” pattern.
         """
-        error_list = []
         if self.width < 9 or self.height < 7:
             return
 
+        error_list = []
+
+        digits: List[Digit] = [
+                Digit.ZERO, Digit.ONE, Digit.TWO, Digit.THREE, Digit.FOUR,
+                Digit.FIVE, Digit.SIX, Digit.SEVEN, Digit.EIGHT, Digit.NINE]
+        d1: int = int(self.pattern / 10)
+        d2: int = int(self.pattern % 10)
         if self.width % 2 == 0:
-            pattern = self.__par_pattern
+            pattern = Digit.create_pattern(digits[d1], digits[d2], 5)
         else:
-            pattern = self.__impar_pattern
+            pattern = Digit.create_pattern(digits[d1], digits[d2], 4)
 
         center_x = self.width // 2
         center_y = self.height // 2
@@ -257,22 +330,23 @@ class MazeGenerator():
                 real_y = py + offset_y
                 if self.entry == (real_x, real_y):
                     error_list.append(f"ENTRY={self.entry} "
-                                      "must be outside of the 42 patter, "
-                                      "try other position")
+                                      f"must be outside of the {self.pattern} "
+                                      "patter, try other position")
                 if self.exit == (real_x, real_y):
                     error_list.append(f"EXIT={self.exit} "
-                                      "must be outside of the 42 patter, "
-                                      "try other position")
+                                      f"must be outside of the {self.pattern} "
+                                      "patter, try other position")
                 pattern_coords.add((real_x, real_y))
-                self.__protected.add((real_x, real_y))
+                self.protected.add((real_x, real_y))
 
+        if self.exit in pattern_coords or self.exit
         if len(error_list) > 0:
             raise MazeError("MAZEGEN", error_list)
 
         for y in range(self.height):
             for x in range(self.width):
                 if (x, y) in pattern_coords:
-                    self.__visited[y][x] = True
+                    self.visited[y][x] = True
 
     def reset_maze(self) -> List[List[int]]:
         """
@@ -296,10 +370,10 @@ class MazeGenerator():
 
         self.__grid = [[15 for _ in range(self.width)]
                        for _ in range(self.height)]
-        self.__visited = [[False for _ in range(self.width)]
-                          for _ in range(self.height)]
+        self.visited = [[False for _ in range(self.width)]
+                        for _ in range(self.height)]
         try:
-            self._set_pattern_42()
+            self._set_pattern()
         except MazeError as e:
             print(e.errors)
             raise MazeError("MAZEGEN", e.errors)
@@ -356,7 +430,7 @@ class MazeGenerator():
         """
         start_x, start_y = self.__get_valid_random_point()
 
-        self.__visited[start_y][start_x] = True
+        self.visited[start_y][start_x] = True
 
         stack = [(start_x, start_y)]
 
@@ -370,7 +444,7 @@ class MazeGenerator():
                 nx, ny = cx + dx, cy + dy
 
                 if (0 <= nx < self.width) and (0 <= ny < self.height):
-                    if not self.__visited[ny][nx]:
+                    if not self.visited[ny][nx]:
                         unvisited_neighbors.append((nx, ny, wall, opp_wall))
 
             if unvisited_neighbors:
@@ -379,7 +453,7 @@ class MazeGenerator():
                 self.__grid[cy][cx] &= ~wall
                 self.__grid[ny][nx] &= ~opp_wall
 
-                self.__visited[ny][nx] = True
+                self.visited[ny][nx] = True
                 stack.append((nx, ny))
                 yield self.__grid, stack
             else:
@@ -416,7 +490,7 @@ class MazeGenerator():
             if not (0 <= nx < self.width and 0 <= ny < self.height):
                 continue
 
-            if (cx, cy) in self.__protected or (nx, ny) in self.__protected:
+            if (cx, cy) in self.protected or (nx, ny) in self.protected:
                 continue
 
             if not (self.__grid[cy][cx] & wall):
@@ -505,7 +579,7 @@ class MazeGenerator():
             x = random.randint(0, self.width - 1)
             y = random.randint(0, self.height - 1)
 
-            if (x, y) not in self.__protected:
+            if (x, y) not in self.protected and self.visited:
                 return (x, y)
 
     def open_doors(self, pos: tuple[int, int]) -> None:
