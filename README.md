@@ -25,10 +25,10 @@ interactive ASCII visualization.
 
 ```bash
 # Clone the repository
-git clone <git@vogsphere-v2.42madrid.com:vogsphere/intra-uuid-a6b25f53-8883-48dc-ab00-ff88b3d642e0-7295009-cagil>
+git clone <git repository>
 cd a-maze-ing
 
-# Create a virtual environment and install the 'mazagen' package
+# **Optional**: Create a virtual environment and install the 'mazagen' package
 python3 -m venv .venv
 source .venv/bin/activate
 
@@ -77,8 +77,8 @@ PERFECT=True                # True for perfect maze (no loops) False for imperfe
 
 # Bonus fields (optional, have sensible defaults)
 SEED=42                     # Random seed (default: 42; use empty/None to disable)
-ANIMATION=True              # Enables live terminal animations
-SPEED_ANIMATION=0.01        # Delay in seconds between frames (e.g., 0.01)
+SPEED_ANIMATION=0.01        # Delay in seconds between frames (e.g., 0.01). 
+                              Disable animation = 0. Max = 1.
 
 # Comments are supported (lines starting with #)
 # Empty lines are ignored
@@ -121,7 +121,7 @@ DFS was chosen as the generation algorithm because:
 
 ## Imperfect Mazes
 
-If `PERFECT=False` is set in the configuration, the engine first generates a perfect DFS maze and then randomly destroys ~25% of the remaining walls, creating multiple valid paths and closed loops.
+If `PERFECT=False` is set in the configuration, the engine first generates a perfect DFS maze and then randomly destroys ~75% of the remaining walls, creating multiple valid paths and closed loops.
 
 ## Solving Algorithm: BFS (Breadth-First Search)
 
@@ -141,14 +141,14 @@ After validating sizes, mazes are enhanced with the mandatory pattern:
 ## Reusable Code Architecture
 
 The reusable component required by Chapter VI is the standalone Python module
-`mazegen.py`, which is packaged as `mazegen-1.0.0.tar.gz` and located at the
+`mazegen.py`, which is packaged as `mazegen-1.0.0-py3-none-any.whl` and located at the
 root of the repository. This module can be installed independently via pip:
 
 ```bash
-pip install ./mazegen-1.0.0.tar.gz
+pip install mazegen-1.0.0-py3-none-any.whl
 ```
 
-### Short Documentation (required by subject)
+### Package Documentation (required by subject)
 
 **Instantiate and use the generator (basic example):**
 
@@ -156,14 +156,21 @@ pip install ./mazegen-1.0.0.tar.gz
 import mazegen
 
 # Initialize the generator directly
-gen = MazeGenerator(width=20, height=15, entry=(0,0), exit=(19,14), perfect=True)
-
-# Generate and solve
-maze_grid = gen.generate()
-path = gen.calculate_path()
+maze = MazeGenerator(width=20, height=15, entry=(0,0), exit=(19,14), perfect=True)
 
 # Uses the Factory Method to parse the file and instantiate the object
 maze = MazeGenerator.maze_from_file("config.txt")
+
+# Generate and solve without animation
+maze_grid = maze.generate()
+path = maze.calculate_path()
+
+# Generate and solve with animation
+    # Renderizes generation process
+    render_generation(maze)
+
+    # Renderizes path resolution
+    render_solve(maze)
 ```
 
 **Instantiate from a config file**
@@ -178,7 +185,7 @@ maze = MazeGenerator.maze_from_file("config.txt")
 - maze.width, maze.height
 - maze.cells[y][x]: int bitmask in 0..15
   (Bits: N=1, E=2, S=4, W=8; bit set => wall is CLOSED)
-- maze.omitted_42 and maze.stamp42 (if present)
+- self.__protected for 42 pattern (if present)
 - path is a list of moves like ["N", "E", ...]
 - maze.get_grid(): Returns the 2D matrix of integers (0-15 bitmasks).
 - maze.get_path(): Returns the list of (x, y) tuples forming the shortest path.
@@ -187,82 +194,81 @@ maze = MazeGenerator.maze_from_file("config.txt")
 ### Building the mazegen-* package
 
 All packaging metadata lives in pyproject.toml at the repository root.
-The subject accepts a .tar.gz, so an sdist-only build is sufficient:
+The subject accepts a .whl, so an sdist-only build is sufficient:
 
 ```bash
 python3 -m pip install --upgrade build
-python3 -m build --sdist
+python3 -m build -w
 ```
 
 The artifact will appear in dist/ as:
-- mazegen-<version>.tar.gz
+- mazegen- < version > .whl
 
 ### Core Modules
 
-#### 1. **mazegen.py** - Maze Generation Engine
-**Highly Reusable**: Multi-algorithm support with pluggable architecture
+#### 1. **generator.py** - Maze Generation Engine
+**Highly Reusable**: Algorithm support with pluggable architecture
 
 ```python
-gen = MazeGenerator(width=20, height=20, seed=42, perfect=True, algorithm="dfs")
-maze = gen.generate(entry=(0,0), exit=(19,19))
-path = gen.solve(maze, entry=(0,0), exit=(19,19))
+render_generation(width=20, height=20, seed=42, perfect=True)
+render_solve(entry=(0,0), exit=(19,19))
+render_path(maze, entry=(0,0), exit=(19,19))
 ```
 
 **Reusable Components:**
-funiciones de render solve y render_generation, y render_path
-<!-- - Algorithm switching: `gen.set_algorithm("prim")` → regenerate with different algorithm
-- Step-by-step generation: `gen.iter_generation_steps(entry, exit)` → yields intermediate mazes for animation
-- Step-by-step solving: `gen.solve_bfs_steps()` → yields solver frontier for visualization
+
+- Algorithm maze: `render_solve` → regenerate maze
+- Step-by-step generation: `render_generation` → yields intermediate mazes for animation
+- Step-by-step solving: `render_path` → yields solver frontier for visualization
 - Constraint validation: Built-in 42 stamp, border, and connectivity checks -->
 
 **Future Extensibility:**
 ```python
-# Easy to add new algorithms:
-# 1. Implement generation logic in _generate_<algorithm>()
-# 2. Add algorithm name to self.algorithm validation
-# 3. Call gen.set_algorithm("<new_algo>") to switch at runtime
+Easy to add new algorithms:
+1. Implement generation logic in _generate_<algorithm>()
+2. Add algorithm name to self.algorithm validation
+3. Call gen.set_algorithm("<new_algo>") to switch at runtime
 ```
 
-<!-- #### 2. **config.py** - Configuration Parser
+#### 2. **config.py** - Configuration Parser
 **Reusable**: Generic KEY=VALUE parser with type validation
 
-```python
-cfg = load_config("config.txt")
-# cfg.width, cfg.height, cfg.entry, cfg.exit, cfg.algorithm, etc.
-```
 
 **Reusable Components:**
-- Parser helper functions: `_parse_int()`, `_parse_bool()`, `_parse_coord()`, `_parse_density()`
+
+- Parser helper functions: `_check_value()`, `check_params()`
 - Validation logic easily adapted for other 42 projects using configuration files
 - Type conversion with clear error messages
 
-#### 3. **serializer.py** - Maze Encoding/Output
+#### 3. **output.py** - Maze Encoding/Output
 **Reusable**: Hexadecimal maze format with validation
 
 ```python
-write_output_file("maze.txt", maze, entry, exit, path)
-# Produces 42-compatible hexadecimal maze format
+write_output_file("output_maze.txt", maze, entry, exit, path)
+Produces 42-compatible hexadecimal maze format
 ```
 
 **Reusable Components:**
+
 - Maze-to-hex encoding (4-bit wall bitmask per cell)
 - Path encoding as direction strings (N/S/E/W)
 - Output validator for format verification
 
 #### 4. **renderer_ascii.py** - Terminal Visualization
+
 **Reusable**: Modular animation system with color support
 
 ```python
-renderer = AsciiRenderer()
-renderer.run(maze, path, gen, cfg)
+render_maze()
+render_solve()
 ```
 
 **Reusable Components:**
-- `_draw_maze()`: Renders maze with walls, entry, exit, path, visited/frontier visualization
+- `render_solve()`: Renders maze with walls, entry, exit, path, visited/frontier visualization
 - Animation speed control: `self.animation_speed` (adjustable)
-- Color cycling system: 5 configurable ANSI colors
-- Solver animation with visited/frontier tracking
-- Generation animation with step-by-step rendering -->
+- Color cycling system: 3 configurable ANSI colors
+- Solver animation with path tracking
+- Generation animation with step-by-step rendering
 
 ---
 
@@ -309,7 +315,7 @@ renderer.run(maze, path, gen, cfg)
 | **Make** | Build automation | `make install`, `make run`, `make test`, `make lint` |
 | **Dataclasses** | Immutable config objects | Frozen `Config` for type-safe configuration |
 | **ANSI Colors** | Terminal rendering | 5-color palette for wall visualization |
-| **termios / tty** | Standard Python libraries for live keyboard event capturing
+| **termios** | Standard Python libraries for live keyboard event capturing
 
 ---
 
@@ -344,4 +350,4 @@ renderer.run(maze, path, gen, cfg)
    - Suggesting testing strategies and edge-case coverage.
    - Gaining a deeper understanding of concepts and examples.
 
-All core project logic — maze generation algorithms, constraint enforcement, pathfinding, rendering logic, and overall architecture — was designed, implemented, and validated by the team.
+All core project logic — maze generation algorithm, constraint enforcement, pathfinding, rendering logic, and overall architecture — was designed, implemented, and validated by the team.
