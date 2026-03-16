@@ -68,12 +68,12 @@ The maze is configured via a `KEY=VALUE` text file. Comments starting with `#` a
 
 ```
 # Mandatory fields (required for all mazes)
-WIDTH=20                    # Maze width in cells (must be > 0)
-HEIGHT=15                   # Maze height in cells (must be > 0)
-ENTRY=0,0                   # Entry point coordinates (x,y)
-EXIT=19,14                  # Exit point coordinates (x,y)
+WIDTH=20                    # Maze width in cells (must be > 1)
+HEIGHT=15                   # Maze height in cells (must be > 1)
+ENTRY=0,0                   # Entry point coordinates (x,y) (must be > 0 and < WIDTH)
+EXIT=19,14                  # Exit point coordinates (x,y) (must be > 0 and < HEIGHT)
 OUTPUT_FILE=maze.txt        # Output file path for hexadecimal maze
-PERFECT=True                # True for perfect maze (no loops) False for imperfect
+PERFECT=True                # True for perfect maze (One path resolution) False for imperfect ()
 
 # Bonus fields (optional, have sensible defaults)
 SEED=42                     # Random seed (default: 42; use empty/None to disable)
@@ -140,19 +140,21 @@ After validating sizes, mazes are enhanced with the mandatory pattern:
 
 ## Reusable Code Architecture
 
-The reusable component required by Chapter VI is the standalone Python module
-`mazegen.py`, which is packaged as `mazegen-1.0.0-py3-none-any.whl` and located at the
+The reusable component required by Chapter VI is the module
+`mazegen`, which is packaged as `mazegen-1.0.0-py3-none-any.whl` and located at the
 root of the repository. This module can be installed independently via pip:
 
 ```bash
 pip install mazegen-1.0.0-py3-none-any.whl
 ```
 
+
 ### Package Documentation (required by subject)
 
 **Instantiate and use the generator (basic example):**
 
 ```python
+# or from maze import MazeGenerator
 import mazegen
 
 # Initialize the generator directly
@@ -206,21 +208,60 @@ The artifact will appear in dist/ as:
 
 ### Core Modules
 
-#### 1. **generator.py** - Maze Generation Engine
-**Highly Reusable**: Algorithm support with pluggable architecture
+#### 1. MazeGenerator Class
 
-```python
-render_generation(width=20, height=20, seed=42, perfect=True)
-render_solve(entry=(0,0), exit=(19,19))
-render_path(maze, entry=(0,0), exit=(19,19))
+The primary entry point is the MazeGenerator class. It manages the grid state, generation logic, and solution pathfinding.
+
+**Instantiation**
+You can instantiate the generator in two ways: via configuration file or manual parameters.
+
+***- Using a Configuration File (Recommended)***
+This approach parses a text file (e.g., config.txt) to set up dimensions, entry/exit points, and seeds.
+```bash
+from mazegen import MazeGenerator
+
+# Initialize using a path to a config file
+# The maze is automatically generated/parsed based on the config
+maze = MazeGenerator("config.txt")
 ```
 
-**Reusable Components:**
+***- Using Manual parameters***
+For dynamic generation without external files.
+```bash
+from mazegen import MazeGenerator
 
-- Algorithm maze: `render_solve` → regenerate maze
-- Step-by-step generation: `render_generation` → yields intermediate mazes for animation
-- Step-by-step solving: `render_path` → yields solver frontier for visualization
-- Constraint validation: Built-in 42 stamp, border, and connectivity checks -->
+maze = MazeGenerator(
+    width=20,
+    height=20,
+    entry=(0, 0),        # (x, y)
+    exit=(19, 19),       # (x, y)
+    seed=None,           # Optional: int or str for reproducibility
+    speed_animation=0.01 # Optional: Set 0 to disable animation
+)
+```
+
+**Generating and Solving**
+```bash
+# 1. Generate the maze structure
+maze.generate()
+
+# 2. Solve the maze (calculates the path from Entry to Exit)
+solution = maze.calculate_path() # Returns a list of coordinates (x, y) that form the shortest path
+```
++ generate(): Populates the internal grid with walls/passages and 42_pattern.
++ calculate_path(): Returns the path (A list of coordinates).
+
+**Accesing Data**
+Once generated, you can access the raw data st
+```bash
+# Access the grid (List[List[int]])
+# Values 0-15 represent bitmask walls (N=1, E=2, S=4, W=8)
+grid_data = maze.get_grid()
+
+# Access the solution path
+# Returns a list of (row, col) tuples or path object
+path_data = maze.get_path()
+```
 
 **Future Extensibility:**
 ```python
@@ -230,45 +271,125 @@ Easy to add new algorithms:
 3. Call gen.set_algorithm("<new_algo>") to switch at runtime
 ```
 
-#### 2. **config.py** - Configuration Parser
-**Reusable**: Generic KEY=VALUE parser with type validation
+#### 2. Configuration Parser
+**Configuration Schema Structure**
 
+The `CONFIG_SCHEMA` global variable in `parsing.py` defines all valid configuration parameters:
+```bash
+CONFIG_SCHEMA = {
+    'mandatory': {
+        'WIDTH': "int",
+        'HEIGHT': "int",
+        'ENTRY': "tuple",
+        'EXIT': "tuple",
+        'OUTPUT_FILE': "file",
+        'PERFECT': "bool"
+    },
+    'bonus': {
+        'SEED': "int",
+        'ANIMATION': "bool",
+        'SPEED_ANIMATION': "float"
+    }
+}
+```
++ `get_config_from_file()`: This function orchestrates file reading, parsing, and validation.
++ `parsing_config()`: This function accumulates all errors before raising, allowing users to fix multiple issues simultaneously
 
-**Reusable Components:**
-
-- Parser helper functions: `_check_value()`, `check_params()`
-- Validation logic easily adapted for other 42 projects using configuration files
-- Type conversion with clear error messages
-
-#### 3. **output.py** - Maze Encoding/Output
-**Reusable**: Hexadecimal maze format with validation
+#### 3. Output Generation file
+The Output Generation system is responsible for converting maze data from the internal grid representation into a persistent file format. This module provides encoding utilities and file writing functionality to serialize maze structures and their solutions to disk.
 
 ```python
-write_output_file("output_maze.txt", maze, entry, exit, path)
-Produces 42-compatible hexadecimal maze format
+from mazegen import generate_output
+
+maze.generate()
+maze.calculate_path()
+
+generate_output(maze) # Generate the file.txt with the grid in hex and the path to solve
 ```
 
-**Reusable Components:**
+The generated output file follows a strict four-section format. Each section is separated by newlines, and the structure is designed for easy parsing.
+```bash
+# Maze Grid
+D393953953
+BC6C696C3A
+851796D56A
+AFAFABFFFA
+AFEFA857FA
+AFFFC2FFFA
+853FBAFD52
+AD6F86FFFA
+A953C553D2
+C47C555456
 
-- Maze-to-hex encoding (4-bit wall bitmask per cell)
-- Path encoding as direction strings (N/S/E/W)
-- Output validator for format verification
+1,2 # Entry
+8,9 # Exit
+WSSSSSSSENEESEEEEE # Direction to solve the maze
+```
 
-#### 4. **renderer_ascii.py** - Terminal Visualization
+#### 4. Terminal Visualization
 
-**Reusable**: Modular animation system with color support
+Functions that generate the maze and solve it, but which demonstrate the process
 
 ```python
-render_maze()
-render_solve()
+- render_maze(maze, show_path, wall_color, terminal)
+- render_generation(maze, wall_color)
+- render_solve(maze, color)
+- render_path(maze, animated_path, color)
 ```
 
-**Reusable Components:**
-- `render_solve()`: Renders maze with walls, entry, exit, path, visited/frontier visualization
-- Animation speed control: `self.animation_speed` (adjustable)
-- Color cycling system: 3 configurable ANSI colors
-- Solver animation with path tracking
-- Generation animation with step-by-step rendering
++ `render_maze(...)`: Generate a string describing the layout of the maze grid, you can print directly on the terminal with `terminal=True`
+
++ `render_generation(...)`: Run the generation algorithm (Perfect or Non-Perfect) and, at each step of the algorithm, clear the screen and redraw the maze, showing the expanding ‘front’ in yellow.
+
++ `render_solve(...)`: It shows how the solution algorithm explores the paths, highlighting the visited cells until it finds the exit
+
++ `render_path(...)`: Draws the path from start to finish instantly, or if “animated_path=True”, draws the path step by step, as if the user were navigating the maze.
+
+*Example:*
+```python
+from mazegen import render_generation, render_solve, render_path, render_maze
+while True:
+        if maze.animation:
+            if generate:
+                render_generation(maze)
+                render_solve(maze)
+        else:
+            if generate:
+                maze.generate() # Generate maze without animation
+                maze.calculate_path() #Generate solve without animation
+
+        if show_path:
+            render_path(maze, maze.animation and anim_path,
+                                pallet[color_idx])
+        render_maze(maze, terminal=True, show_path=show_path,
+                            color=pallet[color_idx])
+```
+
+#### 5. Error Handling
+The `MazeError` class is a custom exception that extends Python's built-in Exception class. It provides structured error reporting with support for both single error messages and aggregated multiple errors.
+
+**Initialization and Attributes**
+The `MazeError` constructor accepts two optional parameters:
+| Parameter | Type           | Default | Description |
+|-----------|----------------|---------|-------------|
+| `prefix`  |`str` or `None` | None    | Primary error message or category
+| `errors`  |`List[str]` or `None` | None    | List of specific error details
+
+**The `__str__` method implements custom formatting logic:**
+
++ *Single Error Mode*: When the errors list is empty, only the prefix is returned
+
++ *Multiple Error Mode*: When the errors list contains items, each error is formatted as "{prefix}: {msg}." and joined with newlines
+This creates a multi-line error message where each line follows the same pattern.
+
+*Example:*
+```python
+try:
+        maze = mazegen.MazeGenerator.maze_from_file(filename)
+    except mazegen.MazeError as e:
+        print(e) # Print formated text in diferrent lines the errors
+        sys.exit()
+```
 
 ---
 
@@ -300,10 +421,10 @@ render_solve()
 
 ### What Could Be Improved
 
-⚠️ **Configuration Validation**: Could add schema validation framework (e.g., Pydantic) for more robust parsing
-⚠️ **Performance**: Large mazes (>100×100) could benefit from parallel constraint checking
-⚠️ **Display Formats**: Only ASCII currently supported; JSON/image export would be a nice option
-⚠️ **GUI Alternative**: Terminal UI is functional but a graphical interface would be an improvement
++ **Configuration Validation**: Could add schema validation framework (e.g., Pydantic) for more robust parsing
++ **Performance**: Large mazes (>100×100) could benefit from parallel constraint checking
++ **Display Formats**: Only ASCII currently supported; JSON/image export would be a nice option
++ **GUI Alternative**: Terminal UI is functional but a graphical interface would be an improvement
 
 ### Tools & Technologies Used
 
@@ -313,7 +434,6 @@ render_solve()
 | **flake8** | Code style linting | PEP 8 compliance (79-char lines) |
 | **git** | Version control | Branch management, PR reviews |
 | **Make** | Build automation | `make install`, `make run`, `make test`, `make lint` |
-| **Dataclasses** | Immutable config objects | Frozen `Config` for type-safe configuration |
 | **ANSI Colors** | Terminal rendering | 5-color palette for wall visualization |
 | **termios** | Standard Python libraries for live keyboard event capturing
 
@@ -351,3 +471,4 @@ render_solve()
    - Gaining a deeper understanding of concepts and examples.
 
 All core project logic — maze generation algorithm, constraint enforcement, pathfinding, rendering logic, and overall architecture — was designed, implemented, and validated by the team.
+

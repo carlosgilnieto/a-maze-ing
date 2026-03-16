@@ -70,11 +70,6 @@ class Draw(Enum):
     """
     List of characters used to draw the grid.
 
-    Base cell pattern:
-    +---+---+
-    | ■     |
-    +   +---+
-
     Attributes:
         WALL_H: String representing a horizontal wall.
         EMPTY_H: String representing an empty horizontal space (no wall).
@@ -139,16 +134,21 @@ def _render_row(maze: MazeGenerator,
                 color: Color,
                 stack: Optional[List[Tuple[int, int]]] = None,
                 path: Optional[PathType] = None) -> str:
-    """
-    Renders a specific row of the grid by evaluating the bitmaps.
+    """Renders a specific row of the grid by evaluating the bitmaps.
 
     Generates two lines per iteration: the top line (north walls)
-    and the centre line (west walls and cell contents).
-        For example, for the cell at position (0, 0):
+    and the center line (west walls and cell contents).
 
-     +---+---+ (North line of 0,0)
-     | ■     | (Center line of 0,0)
-     +---+---+ (North line of 1,0)
+    Args:
+        maze (MazeGenerator): The maze instance containing the grid.
+        y (int): The vertical index of the row to render.
+        show_path (bool): Whether to highlight the solution path.
+        color (Color): Color object for terminal output.
+        stack (Optional[List[Tuple[int, int]]]): Current DFS stack.
+        path (Optional[PathType]): The calculated path to show.
+
+    Returns:
+        str: A string representing two visual lines of the maze row.
     """
     line_north = ""
     line_center = ""
@@ -311,15 +311,22 @@ def render_solve(maze: MazeGenerator,
 def render_path(maze: MazeGenerator,
                 animated_path: bool = False,
                 wall_color: Color = Color.BLACK) -> None:
-    """
-    Plots the final path from the start to the finish.
-        If `animated_path` is False, the entire path is drawn at once. If True,
-    the path is drawn progressively, showing each step in sequence with a delay
-    defined by `maze.speed_animation`.
+    """Plots the final path from the start to the finish.
+
+    If `animated_path` is False, the entire path is drawn at once.
+    If True, the path is drawn progressively, showing each step in
+    sequence with a delay defined by `maze.speed_animation`.
+
+    Args:
+        maze (MazeGenerator): The maze instance to be rendered.
+        animated_path (bool): Whether to animate the path drawing.
+            Defaults to False.
+        wall_color (Color): The color used for the maze walls.
+            Defaults to Color.BLACK.
 
     Returns:
-            None: This function does not return a value; it directly renders
-            the path on the terminal.
+        None: This function does not return a value; it directly
+        renders the path on the terminal.
     """
     toggle_terminal(False)
     disable_cursor()
@@ -402,5 +409,4 @@ def clean_terminal() -> None:
     """
     Clear the terminal and move the cursor to the starting position (0,0).
     """
-    # \033[?25l
     sys.stdout.write("\033[2J\033[3J\033[H")
