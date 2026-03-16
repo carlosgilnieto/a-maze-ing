@@ -201,6 +201,7 @@ def parsing_config(txt: str) -> Dict[str, Any]:
         missing_str = ", ".join(missing_keys)
         error_list.append(f"Missing keys: {missing_str}")
     if len(error_list) > 0:
+        raise ValueError(error_list)
         raise MazeError("", error_list)
     else:
         return config

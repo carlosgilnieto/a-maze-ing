@@ -134,7 +134,7 @@ class MazeGenerator():
         except (FileNotFoundError, PermissionError) as e:
             raise MazeError("FILE ERROR", [str(e)])
         except ValueError as e:
-            raise MazeError("CONFIG ERROR", [str(e)])
+            raise MazeError("CONFIG ERROR", e.args[0])
 
         config = {k.lower(): v
                   for k, v in config.items()}
@@ -541,6 +541,5 @@ class MazeGenerator():
         for y in range(self.height):
             row_grid = ""
             for x in range(self.width):
-                # {:>2} asegura que los números ocupen siempre 2 espacios
                 row_grid += f" {self.__grid[y][x]:>2} "
             print(row_grid)

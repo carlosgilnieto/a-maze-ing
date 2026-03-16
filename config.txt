@@ -1,8 +1,8 @@
-WIDTH=20
-HEIGHT=15
+WIDTH=abc
+HEIGHT=abc
 ENTRY=0,0
 EXIT=19,14
 OUTPUT_FILE=output_maze.txt
 PERFECT=True
 #SEED=42 # Optional
-SPEED_ANIMATION=0.01 # Optional
+#SPEED_ANIMATION=0.01 # Optional
