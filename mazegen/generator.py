@@ -37,9 +37,9 @@ class MazeGenerator():
                  height: int,
                  entry: Tuple[int, int],
                  exit: Tuple[int, int],
+                 output_file: str,
+                 perfect: bool,
                  seed: int = 0,
-                 perfect: bool = True,
-                 output_file: str = "output_maze.txt",
                  speed_animation: float = 0) -> None:
         """
         Initialises the maze generator and prepares the grid.
