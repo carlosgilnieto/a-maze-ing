@@ -62,8 +62,6 @@ def get_config_from_file(directory: str) -> Dict[str, Any]:
                                 "in the root directory")
     except PermissionError:
         raise PermissionError(f"'{directory}' must have read permissions")
-    except MazeError as e:
-        raise ValueError(e)
 
 
 def parsing_config(txt: str) -> Dict[str, Any]:
